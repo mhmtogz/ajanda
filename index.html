@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çanakkale 112 Kurumsal Ajanda</title>
+    <title>Çanakkale 112 Kurumsal Ajanda V7.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- jsPDF Kütüphanesi -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style> 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; } 
@@ -84,8 +83,6 @@
             <!-- KAPSAMLI AYLIK PDF RAPORU -->
             <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 mb-6 space-y-3">
                 <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-900"><i class="fa-solid fa-file-pdf mr-1"></i> Kapsamlı Aylık Yatay PDF Raporu</h4>
-                <p class="text-xs text-indigo-700">İlk sayfada Başhekimlik ortak ajandası, devamında ise her birimin ayrı sayfalarda listelendiği tam teşekküllü yatay PDF raporunu indirin.</p>
-                
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[11px] font-semibold text-slate-600 mb-1">Yıl ve Ay Seçin</label>
@@ -99,10 +96,9 @@
                 </div>
             </div>
 
-            <!-- VERİ TEMİZLEME BÖLÜMÜ -->
+            <!-- VERİ TEMİZLEME -->
             <div class="bg-rose-50 p-4 rounded-xl border border-rose-100 mb-6 space-y-3">
                 <h4 class="text-xs font-bold uppercase tracking-wider text-rose-900"><i class="fa-solid fa-trash-arrow-up mr-1"></i> Arşiv Veri Temizliği</h4>
-                <p class="text-xs text-rose-700">Seçilen aya ait veritabanı kayıtlarını kalıcı olarak temizleyebilirsiniz.</p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <select id="pdf-report-target" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white">
                         <option value="bashekim">Başhekimlik Genel</option>
@@ -158,7 +154,7 @@
                         <input type="date" id="modal-event-date" required class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Saat (08:00 - 17:30)</label>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Saat</label>
                         <select id="modal-event-time" required class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"></select>
                     </div>
                 </div>
@@ -196,7 +192,6 @@
                         <span id="current-user-badge" class="text-xs font-semibold text-white block">Aktif Kullanıcı</span>
                     </div>
                     <div class="flex items-center gap-1.5 ml-2 border-l border-white/20 pl-3">
-                        <!-- Yalnızca Başhekim ve Admin (Mehmet) için SKKM Paneli Düğmesi -->
                         <a href="kkm.html" id="kkm-nav-btn" class="hidden bg-blue-600 hover:bg-blue-700 text-white text-xs px-2.5 py-1.5 rounded-lg transition shadow-xs flex items-center gap-1" title="SKKM Paneli">
                             <i class="fa-solid fa-headset"></i> SKKM
                         </a>
@@ -245,12 +240,11 @@
                     </div>
                     <button onclick="changeWeek(1)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition">Sonraki Hafta <i class="fa-solid fa-chevron-right ml-1"></i></button>
                     <button onclick="fetchEvents()" class="p-2 text-slate-500 hover:text-indigo-600 rounded-xl border border-slate-200 bg-white" title="Yenile"><i class="fa-solid fa-rotate"></i></button>
-                    <!-- Haftalık Doğrudan PDF İndir Butonu -->
                     <button onclick="generateCurrentWeekPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs" title="Bu Haftanın PDF Çıktısını Al"><i class="fa-solid fa-file-arrow-down"></i> PDF İndir</button>
                 </div>
             </div>
 
-            <!-- Masa Takvimi Matrisi (Pazartesi - Cuma, 5 Gün) -->
+            <!-- Masa Takvimi Matrisi -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-grow overflow-hidden flex flex-col">
                 <div class="overflow-x-auto overflow-y-auto max-h-[700px] custom-scrollbar flex-grow">
                     <table class="w-full border-collapse text-left min-w-[900px]">
@@ -264,7 +258,7 @@
         </main>
 
         <footer class="text-center py-4 text-xs text-slate-400 border-t border-slate-200 mt-6 bg-white">
-            Çanakkale İl Ambulans Servisi Başhekimliği &bull; Kurumsal Masa Ajandası *Agonya V1.1
+            Çanakkale İl Ambulans Servisi Başhekimliği &bull; Kurumsal Masa Ajandası V7.0
         </footer>
     </div>
 
@@ -314,9 +308,7 @@
             if (!clockTextEl) return;
             const now = new Date();
             const options = { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' };
-            const dateStr = now.toLocaleDateString('tr-TR', options);
-            const timeStr = now.toLocaleTimeString('tr-TR');
-            clockTextEl.textContent = `${dateStr} - ${timeStr}`;
+            clockTextEl.textContent = `${now.toLocaleDateString('tr-TR', options)} - ${now.toLocaleTimeString('tr-TR')}`;
         }
 
         function initializeUnitSelects() {
@@ -377,7 +369,12 @@
             usersList.forEach(user => {
                 const opt = document.createElement('option');
                 opt.value = user.adsoyad;
-                opt.textContent = `${user.adsoyad} (${user.birim})`;
+                
+                let displayName = user.adsoyad;
+                if (user.adsoyad.includes('Sertaç')) displayName = 'Başhekim (Sertaç)';
+                else if (user.adsoyad.includes('Mehmet')) displayName = 'Admin (Mehmet)';
+                
+                opt.textContent = displayName;
                 loginSelectEl.appendChild(opt);
             });
         }
@@ -390,7 +387,7 @@
                     const parsedUser = JSON.parse(savedUser);
                     const found = usersList.find(u => u.adsoyad === parsedUser.adsoyad);
                     if (found) {
-                        currentUser = { adsoyad: found.adsoyad, birim: found.birim, rol: found.rol };
+                        currentUser = found;
                         startAppSession();
                     }
                 } catch (e) {
@@ -405,9 +402,14 @@
             appContainer.classList.remove('hidden');
             appContainer.classList.add('flex');
 
-            document.getElementById('current-user-badge').textContent = `Aktif: ${currentUser.adsoyad} (${currentUser.birim})`;
+            let userRoleTitle = currentUser.birim;
+            if (currentUser.rol === 'admin') {
+                userRoleTitle = currentUser.adsoyad.includes('Sertaç') ? 'Başhekim' : 'Admin';
+            }
+
+            document.getElementById('current-user-badge').textContent = `Aktif: ${currentUser.adsoyad} (${userRoleTitle})`;
             
-            const isManager = (currentUser.adsoyad === 'Mehmet' || currentUser.rol === 'bashekim');
+            const isManager = (currentUser.rol === 'admin' || currentUser.adsoyad.includes('Sertaç'));
             if (isManager) {
                 document.getElementById('admin-btn').classList.remove('hidden');
                 document.getElementById('kkm-nav-btn').classList.remove('hidden');
@@ -428,8 +430,8 @@
 
             const foundUser = usersList.find(u => u.adsoyad === selectedName);
 
-            if (foundUser && (foundUser.sifre === enteredPass || (foundUser.adsoyad === 'Mehmet' && enteredPass === '1717'))) {
-                currentUser = { adsoyad: foundUser.adsoyad, birim: foundUser.birim, rol: foundUser.rol };
+            if (foundUser && (foundUser.sifre === enteredPass || (foundUser.adsoyad.includes('Mehmet') && enteredPass === '1717'))) {
+                currentUser = foundUser;
                 localStorage.setItem('canakkale_112_user', JSON.stringify(currentUser));
                 startAppSession();
             } else {
@@ -492,7 +494,7 @@
                         <span class="font-bold text-slate-800">${user.adsoyad}</span>
                         <span class="text-slate-500 block">Birim: ${user.birim} | Şifre: ${user.sifre || 'Belirtilmemiş'}</span>
                     </div>
-                    ${user.adsoyad !== 'Mehmet' ? `<button onclick="deleteUserFromSupabase('${user.id}')" class="text-rose-600 hover:text-rose-800 p-1"><i class="fa-solid fa-trash-can"></i> Sil</button>` : '<span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">Admin</span>'}
+                    ${!user.adsoyad.includes('Mehmet') && !user.adsoyad.includes('Sertaç') ? `<button onclick="deleteUserFromSupabase('${user.id}')" class="text-rose-600 hover:text-rose-800 p-1"><i class="fa-solid fa-trash-can"></i> Sil</button>` : '<span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">Yönetici</span>'}
                 `;
                 listEl.appendChild(item);
             });
@@ -506,7 +508,7 @@
 
             if (!adsoyad || !sifre) return;
 
-            const { error } = await _supabase.from('kullanicilar').insert([{ adsoyad, birim, sifre, rol: 'birim_kullanicisi' }]);
+            const { error } = await _supabase.from('kullanicilar').insert([{ adsoyad, birim, rol: 'birim_kullanicisi', sifre }]);
             if (error) { alert("Kullanıcı eklenirken hata: " + error.message); return; }
 
             document.getElementById('admin-new-name').value = '';
@@ -544,12 +546,13 @@
             const listTitle = document.getElementById('list-title');
 
             ['bashekim', 'birim', 'kisisel'].forEach(t => {
-                const btn = document.getElementById(`tab-${t}`);
-                btn.className = "py-3 px-4 font-medium text-sm border-b-2 border-transparent flex items-center gap-2 transition whitespace-nowrap text-slate-500 hover:text-slate-800";
+                document.getElementById(`tab-${t}`).className = "py-3 px-4 font-medium text-sm border-b-2 border-transparent flex items-center gap-2 transition whitespace-nowrap text-slate-500 hover:text-slate-800";
             });
 
             headerEl.className = "text-white shadow-md py-4 px-4 transition-colors duration-300";
             loginIconBox.className = "w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner transition-colors duration-300";
+
+            const isSertac = currentUser.adsoyad.includes('Sertaç');
 
             if (currentTab === 'bashekim') {
                 headerEl.classList.add('bg-indigo-600');
@@ -562,7 +565,7 @@
                 loginIconBox.classList.add('bg-amber-100', 'text-amber-600');
                 birimBtn.className = "py-3 px-4 font-semibold text-sm border-b-2 border-amber-600 text-amber-600 flex items-center gap-2 transition whitespace-nowrap";
                 
-                if (currentUser.rol === 'bashekim') {
+                if (isSertac) {
                     listTitle.textContent = "Tüm Birimler Ortak Ajandası";
                     bashekimUnitFilter.classList.remove('hidden');
                 } else {
@@ -592,7 +595,6 @@
             const diffToMonday = curr.getDate() - day + (day === 0 ? -6 : 1);
             const monday = new Date(curr.setDate(diffToMonday));
             const weekDates = [];
-            
             for (let i = 0; i < 5; i++) {
                 const nextDay = new Date(monday);
                 nextDay.setDate(monday.getDate() + i);
@@ -610,19 +612,20 @@
             toggleEventModal(true);
         }
 
-        function toggleEventModal(show, date = '', time = '', eventData = null) {
+        function toggleEventModal(show, eventData = null) {
             const modal = document.getElementById('event-modal');
             const unauthMsg = document.getElementById('modal-unauthorized');
             const targetContainer = document.getElementById('modal-target-unit-container');
             const formEl = document.getElementById('modal-agenda-form');
 
             if (show) {
+                const isSertac = currentUser.adsoyad.includes('Sertaç');
                 let canWrite = false;
                 if (currentTab === 'bashekim') {
-                    canWrite = (currentUser.rol === 'bashekim');
+                    canWrite = isSertac;
                 } else if (currentTab === 'birim') {
                     canWrite = true;
-                    if (currentUser.rol === 'bashekim') { targetContainer.classList.remove('hidden'); }
+                    if (isSertac) { targetContainer.classList.remove('hidden'); }
                     else { targetContainer.classList.add('hidden'); }
                 } else if (currentTab === 'kisisel') {
                     canWrite = true;
@@ -638,17 +641,10 @@
                     document.getElementById('modal-event-time').value = eventData.saat;
                     document.getElementById('modal-event-status').value = eventData.durum || 'Planlandı';
                     document.getElementById('modal-event-desc').value = eventData.aciklama;
-                    if (currentUser.rol === 'bashekim' && currentTab === 'birim') {
+                    if (isSertac && currentTab === 'birim') {
                         document.getElementById('modal-target-unit-select').value = eventData.hedef_birim || birimlerListesi[0];
                     }
-                } else if (date && time) {
-                    document.getElementById('edit-event-id').value = '';
-                    document.getElementById('modal-event-date').value = date;
-                    document.getElementById('modal-event-time').value = time;
-                    document.getElementById('modal-event-status').value = 'Planlandı';
-                    document.getElementById('modal-event-desc').value = '';
                 }
-
                 modal.classList.remove('hidden');
             } else {
                 modal.classList.add('hidden');
@@ -664,29 +660,17 @@
             const aciklama = document.getElementById('modal-event-desc').value.trim();
             if (!aciklama) return;
 
+            const isSertac = currentUser.adsoyad.includes('Sertaç');
             let hedefBirimVal = null;
             if (currentTab === 'birim') {
-                hedefBirimVal = (currentUser.rol === 'bashekim') 
-                    ? document.getElementById('modal-target-unit-select').value 
-                    : currentUser.birim;
+                hedefBirimVal = isSertac ? document.getElementById('modal-target-unit-select').value : currentUser.birim;
             }
 
             if (eventId) {
-                const { error } = await _supabase.from('ajanda_notlari').update({
-                    tarih, saat, durum, aciklama, hedef_birim: hedefBirimVal
-                }).eq('id', eventId);
-
+                const { error } = await _supabase.from('ajanda_notlari').update({ tarih, saat, durum, aciklama, hedef_birim: hedefBirimVal }).eq('id', eventId);
                 if (error) { alert("Güncelleme hatası: " + error.message); return; }
             } else {
-                const yeniKayit = {
-                    tur: currentTab,
-                    hedef_birim: hedefBirimVal,
-                    ekleyen_kisi: currentUser.adsoyad,
-                    tarih,
-                    saat,
-                    durum,
-                    aciklama
-                };
+                const yeniKayit = { tur: currentTab, hedef_birim: hedefBirimVal, ekleyen_kisi: currentUser.adsoyad, tarih, saat, durum, aciklama };
                 const { error } = await _supabase.from('ajanda_notlari').insert([yeniKayit]);
                 if (error) { alert("Hata: " + error.message); return; }
             }
@@ -702,13 +686,12 @@
             const startDate = weekDays[0];
             const endDate = weekDays[4];
 
-            let query = _supabase.from('ajanda_notlari').select('*')
-                .gte('tarih', startDate)
-                .lte('tarih', endDate)
-                .eq('tur', currentTab);
+            const isSertac = currentUser.adsoyad.includes('Sertaç');
+
+            let query = _supabase.from('ajanda_notlari').select('*').gte('tarih', startDate).lte('tarih', endDate).eq('tur', currentTab);
 
             if (currentTab === 'birim') {
-                if (currentUser.rol === 'bashekim') {
+                if (isSertac) {
                     const selectedUnitFilter = document.getElementById('bashekim-unit-filter').value;
                     if (selectedUnitFilter !== 'Tumu') { query = query.eq('hedef_birim', selectedUnitFilter); }
                 } else {
@@ -725,11 +708,7 @@
 
             const headerEl = document.getElementById('calendar-header');
             const bodyEl = document.getElementById('calendar-body');
-
-            const dayNames = [
-                { name: 'Pazartesi' }, { name: 'Salı' }, { name: 'Çarşamba' },
-                { name: 'Perşembe' }, { name: 'Cuma' }
-            ];
+            const dayNames = [{ name: 'Pazartesi' }, { name: 'Salı' }, { name: 'Çarşamba' }, { name: 'Perşembe' }, { name: 'Cuma' }];
 
             let activeThemeColorClass = 'text-indigo-700 bg-indigo-50';
             let activeThemeBadgeClass = 'bg-indigo-600 text-white';
@@ -761,10 +740,7 @@
             const timeSlots = [];
             for (let h = 8; h <= 17; h++) {
                 const hourStr = h < 10 ? '0' + h : '' + h;
-                timeSlots.push(`${hourStr}:00`);
-                timeSlots.push(`${hourStr}:15`);
-                timeSlots.push(`${hourStr}:30`);
-                timeSlots.push(`${hourStr}:45`);
+                timeSlots.push(`${hourStr}:00`, `${hourStr}:15`, `${hourStr}:30`, `${hourStr}:45`);
             }
             timeSlots.push('17:30');
 
@@ -773,13 +749,12 @@
             timeSlots.forEach(time => {
                 const row = document.createElement('tr');
                 row.className = "hover:bg-slate-50/80 transition";
-
                 let rowHtml = `<td class="p-2 text-center text-xs font-bold text-slate-500 border-r border-slate-200 bg-slate-50">${time}</td>`;
 
                 weekDays.forEach(dateStr => {
                     rowHtml += `
                         <td class="p-1.5 border-r border-slate-200 align-top h-16 cursor-pointer ${hoverThemeClass} transition group relative" 
-                            onclick="toggleEventModal(true, '${dateStr}', '${time}')" title="Bu saate plan eklemek için tıklayın">
+                            onclick="toggleEventModal(true, null)" title="Bu saate plan eklemek için tıklayın">
                             <div class="absolute inset-0 opacity-0 group-hover:opacity-100 flex items-center justify-center pointer-events-none z-20">
                                 <span class="text-[10px] ${activeThemeBadgeClass} px-1.5 py-0.5 rounded shadow-xs"><i class="fa-solid fa-plus"></i> Ekle</span>
                             </div>
@@ -787,7 +762,6 @@
                         </td>
                     `;
                 });
-
                 row.innerHTML = rowHtml;
                 bodyEl.appendChild(row);
             });
@@ -799,7 +773,6 @@
                     
                     if (container) {
                         const card = document.createElement('div');
-                        
                         let cardBgClass = 'bg-sky-50 text-sky-900 border-sky-200';
                         let statusBadge = `<span class="text-[9px] bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded-full font-bold">Planlandı</span>`;
 
@@ -814,16 +787,16 @@
                         card.className = `p-1.5 ${cardBgClass} border rounded-lg text-xs space-y-1 relative group/card shadow-2xs`;
 
                         let actionButtons = '';
-                        if (ev.ekleyen_kisi === currentUser.adsoyad || currentUser.rol === 'bashekim') {
+                        if (ev.ekleyen_kisi === currentUser.adsoyad || isSertac) {
                             actionButtons = `
                                 <div class="absolute top-1 right-1 flex items-center gap-1 opacity-0 group-hover/card:opacity-100 transition bg-white/90 p-0.5 rounded shadow-xs">
-                                    <button onclick="event.stopPropagation(); editEvent(${ev.id}, '${ev.tarih}', '${ev.saat}', '${ev.durum || 'Planlandı'}', '${ev.hedef_birim || ''}', \`${escapeHtml(ev.aciklama)}\`)" class="text-blue-500 hover:text-blue-700 p-0.5" title="Düzenle"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                                    <button onclick="event.stopPropagation(); editEvent(${ev.id})" class="text-blue-500 hover:text-blue-700 p-0.5" title="Düzenle"><i class="fa-solid fa-pen text-[10px]"></i></button>
                                     <button onclick="event.stopPropagation(); deleteEvent(${ev.id})" class="text-rose-500 hover:text-rose-700 p-0.5" title="Sil"><i class="fa-solid fa-trash-can text-[10px]"></i></button>
                                 </div>
                             `;
                         }
 
-                        let birimBadgeText = (currentTab === 'birim' && currentUser.rol === 'bashekim' && ev.hedef_birim) 
+                        let birimBadgeText = (currentTab === 'birim' && isSertac && ev.hedef_birim) 
                             ? `<span class="text-[9px] bg-white/70 text-slate-800 px-1 py-0.2 rounded font-semibold block mb-0.5">${escapeHtml(ev.hedef_birim)}</span>` 
                             : '';
 
@@ -842,16 +815,9 @@
             }
         }
 
-        window.editEvent = function(id, tarih, saat, durum, hedefBirim, aciklama) {
-            document.getElementById('edit-event-id').value = id;
-            document.getElementById('modal-event-date').value = tarih;
-            document.getElementById('modal-event-time').value = saat;
-            document.getElementById('modal-event-status').value = durum;
-            document.getElementById('modal-event-desc').value = aciklama;
-            if (currentUser.rol === 'bashekim' && currentTab === 'birim') {
-                document.getElementById('modal-target-unit-select').value = hedefBirim;
-            }
-            toggleEventModal(true);
+        window.editEvent = function(id) {
+            const ev = cachedCurrentWeekEvents.find(e => e.id == id);
+            if (ev) toggleEventModal(true, ev);
         };
 
         window.deleteEvent = async function(id) {
@@ -859,13 +825,11 @@
                 await _supabase.from('ajanda_notlari').delete().eq('id', id);
                 fetchEvents();
             }
-        }
+        };
 
-        // --- HAFTALIK YATAY PDF İNDİR ---
         function generateCurrentWeekPDF() {
             const filterDate = document.getElementById('filter-date').value;
             const weekDays = getWorkWeekDates(filterDate);
-            
             if (!cachedCurrentWeekEvents || cachedCurrentWeekEvents.length === 0) {
                 alert("Bu hafta ekranda gösterilecek kayıtlı plan bulunmamaktadır.");
                 return;
@@ -873,243 +837,54 @@
 
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('l', 'mm', 'a4');
-
             const dayNamesTR = ['Pazartesi', 'Sali', 'Carsamba', 'Persembe', 'Cuma'];
-            const tabTitleMap = {
-                'bashekim': 'Bashekimlik Genel Masa Ajandasi',
-                'birim': currentUser.rol === 'bashekim' ? 'Tum Birimler Ortak Ajandasi' : `${currentUser.birim} Ortak Ajandasi`,
-                'kisisel': `${currentUser.adsoyad} - Kisisel Ajanda`
-            };
 
             doc.setFont("helvetica", "bold");
             doc.setFontSize(13);
             doc.setTextColor(30, 41, 59);
             doc.text(fixTurkishChars("CANAKKALE IL AMBULANS SERVISI BASHEKIMLIGI"), 14, 12);
 
-            doc.setFontSize(10);
-            doc.setTextColor(79, 70, 229);
-            const reportTitle = tabTitleMap[currentTab] || 'Haftalik Masa Ajandasi';
-            doc.text(fixTurkishChars(`${reportTitle} (${weekDays[0].split('-').reverse().join('.')} - ${weekDays[4].split('-').reverse().join('.')})`), 14, 18);
-
-            doc.setFontSize(8);
-            doc.setTextColor(100, 100, 100);
-            doc.text(fixTurkishChars(`Rapor Olusturma: ${new Date().toLocaleDateString('tr-TR')}`), 14, 23);
-
             let startY = 30;
-            doc.setFontSize(9);
-
-            const sortedEvents = [...cachedCurrentWeekEvents].sort((a, b) => a.tarih.localeCompare(b.tarih) || a.saat.localeCompare(b.saat));
-
-            sortedEvents.forEach(ev => {
+            cachedCurrentWeekEvents.forEach(ev => {
                 if (startY > 185) return;
-
                 const [y, m, d] = ev.tarih.split('-');
-                const dayIndex = weekDays.indexOf(ev.tarih);
-                const dayName = dayIndex !== -1 ? dayNamesTR[dayIndex] : '';
-                const birimTag = (currentTab === 'birim' && currentUser.rol === 'bashekim' && ev.hedef_birim) ? `[${ev.hedef_birim}] ` : '';
-
+                const dayName = dayNamesTR[weekDays.indexOf(ev.tarih)] || '';
                 doc.setFillColor(248, 250, 252);
-                doc.setDrawColor(203, 213, 225);
                 doc.roundedRect(14, startY, 269, 11, 1, 1, 'FD');
-
-                doc.setFont("helvetica", "bold");
-                doc.setTextColor(30, 41, 59);
                 doc.text(fixTurkishChars(`${dayName}, ${d}.${m}.${y} - Saat: ${ev.saat}`), 18, startY + 7);
-
-                doc.setFont("helvetica", "normal");
-                doc.text(fixTurkishChars(`${birimTag}${ev.ekleyen_kisi}: ${ev.aciklama} (${ev.durum || 'Planlandi'})`), 85, startY + 7);
-
+                doc.text(fixTurkishChars(`${ev.ekleyen_kisi}: ${ev.aciklama} (${ev.durum || 'Planlandi'})`), 85, startY + 7);
                 startY += 14;
             });
-
-            doc.save(`Canakkale_112_Haftalik_Ajanda_${weekDays[0]}.pdf`);
+            doc.save(`Canakkale_112_Ajanda_${weekDays[0]}.pdf`);
         }
 
-        // --- KAPSAMLI AYLIK PDF RAPORU (ADMIN) ---
         async function generateComprehensiveMonthlyPDF() {
             const monthInput = document.getElementById('pdf-report-month').value;
-            if (!monthInput) { alert("Lütfen bir ay seçin."); return; }
-
+            if (!monthInput) return;
             const [year, month] = monthInput.split('-');
-            const firstDayOfMonth = new Date(year, month - 1, 1);
-            const lastDayOfMonth = new Date(year, month, 0);
+            const lastDay = new Date(year, month, 0).getDate();
 
-            let curr = new Date(firstDayOfMonth);
-            const day = curr.getDay();
-            const diffToMonday = curr.getDate() - day + (day === 0 ? -6 : 1);
-            curr.setDate(diffToMonday);
-
-            const mondaysOfWeeks = [];
-            while (curr <= lastDayOfMonth) {
-                mondaysOfWeeks.push(new Date(curr).toISOString().split('T')[0]);
-                curr.setDate(curr.getDate() + 7);
-            }
-
-            const startDateStr = `${year}-${month}-01`;
-            const endDateStr = `${year}-${month}-${lastDayOfMonth.getDate()}`;
-
-            const { data: allEvents, error } = await _supabase.from('ajanda_notlari').select('*')
-                .gte('tarih', startDateStr)
-                .lte('tarih', endDateStr);
-
-            if (error) { alert("Veriler çekilemedi: " + error.message); return; }
+            const { data: allEvents } = await _supabase.from('ajanda_notlari').select('*')
+                .gte('tarih', `${year}-${month}-01`).lte('tarih', `${year}-${month}-${lastDay}`);
 
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('l', 'mm', 'a4');
-
-            const monthNamesTR = ["Ocak", "Subat", "Mart", "Nisan", "Mayis", "Haziran", "Temmuz", "Agustos", "Eylul", "Ekim", "Kasim", "Aralik"];
-            const monthTitleStr = `${monthNamesTR[parseInt(month)-1]} ${year}`;
-            const dayNamesTR = ['Pazartesi', 'Sali', 'Carsamba', 'Persembe', 'Cuma'];
-
-            mondaysOfWeeks.forEach((mondayStr, weekIndex) => {
-                const weekDates = [];
-                const mDate = new Date(mondayStr);
-                for (let i = 0; i < 5; i++) {
-                    const d = new Date(mDate);
-                    d.setDate(mDate.getDate() + i);
-                    weekDates.push(d.toISOString().split('T')[0]);
-                }
-
-                const bashekimWeekEvents = (allEvents || []).filter(ev => ev.tur === 'bashekim' && weekDates.includes(ev.tarih));
-                if (bashekimWeekEvents.length === 0 && weekIndex > 0) return;
-
-                if (doc.internal.getNumberOfPages() > 1 || weekIndex > 0) {
-                    doc.addPage();
-                }
-
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(13);
-                doc.setTextColor(30, 41, 59);
-                doc.text(fixTurkishChars("CANAKKALE IL AMBULANS SERVISI BASHEKIMLIGI"), 14, 12);
-
-                doc.setFontSize(10);
-                doc.setTextColor(79, 70, 229);
-                doc.text(fixTurkishChars(`Bashekimlik Genel Ortak Ajandasi (${monthTitleStr} - ${weekIndex + 1}. Hafta)`), 14, 18);
-
-                doc.setFontSize(8);
-                doc.setTextColor(100, 100, 100);
-                doc.text(fixTurkishChars(`Tarih Araligi: ${weekDates[0].split('-').reverse().join('.')} - ${weekDates[4].split('-').reverse().join('.')}`), 14, 23);
-
-                let startY = 30;
-                doc.setFontSize(9);
-
-                if (bashekimWeekEvents.length === 0) {
-                    doc.setFont("helvetica", "italic");
-                    doc.setTextColor(150, 150, 150);
-                    doc.text(fixTurkishChars("Bu hafta için kayıtlı plan bulunmamaktadır."), 14, startY + 10);
-                } else {
-                    bashekimWeekEvents.sort((a, b) => a.tarih.localeCompare(b.tarih) || a.saat.localeCompare(b.saat));
-                    bashekimWeekEvents.forEach(ev => {
-                        if (startY > 185) return;
-                        const [y, m, d] = ev.tarih.split('-');
-                        const dayIndex = weekDates.indexOf(ev.tarih);
-                        const dayName = dayIndex !== -1 ? dayNamesTR[dayIndex] : '';
-
-                        doc.setFillColor(248, 250, 252);
-                        doc.setDrawColor(203, 213, 225);
-                        doc.roundedRect(14, startY, 269, 11, 1, 1, 'FD');
-
-                        doc.setFont("helvetica", "bold");
-                        doc.setTextColor(30, 41, 59);
-                        doc.text(fixTurkishChars(`${dayName}, ${d}.${m}.${y} - Saat: ${ev.saat}`), 18, startY + 7);
-
-                        doc.setFont("helvetica", "normal");
-                        doc.text(fixTurkishChars(`${ev.ekleyen_kisi}: ${ev.aciklama} (${ev.durum || 'Planlandi'})`), 85, startY + 7);
-
-                        startY += 14;
-                    });
-                }
-            });
-
-            birimlerListesi.forEach(birimName => {
-                mondaysOfWeeks.forEach((mondayStr, weekIndex) => {
-                    const weekDates = [];
-                    const mDate = new Date(mondayStr);
-                    for (let i = 0; i < 5; i++) {
-                        const d = new Date(mDate);
-                        d.setDate(mDate.getDate() + i);
-                        weekDates.push(d.toISOString().split('T')[0]);
-                    }
-
-                    const birimWeekEvents = (allEvents || []).filter(ev => ev.tur === 'birim' && ev.hedef_birim === birimName && weekDates.includes(ev.tarih));
-                    if (birimWeekEvents.length === 0) return;
-
-                    doc.addPage();
-
-                    doc.setFont("helvetica", "bold");
-                    doc.setFontSize(13);
-                    doc.setTextColor(30, 41, 59);
-                    doc.text(fixTurkishChars("CANAKKALE IL AMBULANS SERVISI BASHEKIMLIGI"), 14, 12);
-
-                    doc.setFontSize(10);
-                    doc.setTextColor(217, 119, 6);
-                    doc.text(fixTurkishChars(`${birimName} Ajandasi (${monthTitleStr} - ${weekIndex + 1}. Hafta)`), 14, 18);
-
-                    doc.setFontSize(8);
-                    doc.setTextColor(100, 100, 100);
-                    doc.text(fixTurkishChars(`Tarih Araligi: ${weekDates[0].split('-').reverse().join('.')} - ${weekDates[4].split('-').reverse().join('.')}`), 14, 23);
-
-                    let startY = 30;
-                    doc.setFontSize(9);
-                    birimWeekEvents.sort((a, b) => a.tarih.localeCompare(b.tarih) || a.saat.localeCompare(b.saat));
-
-                    birimWeekEvents.forEach(ev => {
-                        if (startY > 185) return;
-                        const [y, m, d] = ev.tarih.split('-');
-                        const dayIndex = weekDates.indexOf(ev.tarih);
-                        const dayName = dayIndex !== -1 ? dayNamesTR[dayIndex] : '';
-
-                        doc.setFillColor(254, 252, 232);
-                        doc.setDrawColor(253, 230, 138);
-                        doc.roundedRect(14, startY, 269, 11, 1, 1, 'FD');
-
-                        doc.setFont("helvetica", "bold");
-                        doc.setTextColor(30, 41, 59);
-                        doc.text(fixTurkishChars(`${dayName}, ${d}.${m}.${y} - Saat: ${ev.saat}`), 18, startY + 7);
-
-                        doc.setFont("helvetica", "normal");
-                        doc.text(fixTurkishChars(`${ev.ekleyen_kisi}: ${ev.aciklama} (${ev.durum || 'Planlandi'})`), 85, startY + 7);
-
-                        startY += 14;
-                    });
-                });
-            });
-
-            doc.save(`Canakkale_112_Kurumsal_Tam_Ajanda_Raporu_${year}_${month}.pdf`);
+            doc.text(fixTurkishChars(`Canakkale 112 Aylik Raporu - ${month}/${year}`), 14, 15);
+            doc.save(`Canakkale_112_Rapor_${year}_${month}.pdf`);
             toggleAdminModal(false);
         }
 
         async function clearMonthData() {
             const monthInput = document.getElementById('pdf-report-month').value;
             const targetType = document.getElementById('pdf-report-target').value;
-            if (!monthInput) { alert("Lütfen temizlenecek ayı seçin."); return; }
-
+            if (!monthInput) return;
             const [year, month] = monthInput.split('-');
-            const lastDayOfMonth = new Date(year, month, 0).getDate();
-            const startDateStr = `${year}-${month}-01`;
-            const endDateStr = `${year}-${month}-${lastDayOfMonth}`;
+            const lastDay = new Date(year, month, 0).getDate();
 
-            const confirmMsg = `DİKKAT: ${month}/${year} dönemine ait verileri kalıcı olarak silmek istediğinize emin misiniz?`;
-            
-            if (confirm(confirmMsg)) {
-                let query = _supabase.from('ajanda_notlari').delete()
-                    .gte('tarih', startDateStr)
-                    .lte('tarih', endDateStr);
-
-                if (targetType === 'bashekim') {
-                    query = query.eq('tur', 'bashekim');
-                } else {
-                    query = query.eq('tur', 'birim');
-                }
-
-                const { error } = await query;
-                if (error) {
-                    alert("Veriler temizlenirken hata oluştu: " + error.message);
-                } else {
-                    alert("Seçilen dönemin verileri başarıyla temizlendi.");
-                    fetchEvents();
-                    toggleAdminModal(false);
-                }
+            if (confirm("Seçilen dönemin verilerini silmek istediğinize emin misiniz?")) {
+                await _supabase.from('ajanda_notlari').delete().gte('tarih', `${year}-${month}-01`).lte('tarih', `${year}-${month}-${lastDay}`).eq('tur', targetType);
+                fetchEvents();
+                toggleAdminModal(false);
             }
         }
 
