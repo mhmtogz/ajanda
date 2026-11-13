@@ -25,12 +25,12 @@
                     <i class="fa-solid fa-headset"></i>
                 </div>
                 <h2 class="text-xl font-bold text-slate-800">SKKM Ajanda </h2>
-                <p class="text-xs text-slate-500 mt-1">Lütfen kullanıcı seçin ve şifrenizi girin.</p>
+                <p class="text-xs text-slate-500 mt-1">Lütfen rol seçin ve şifrenizi girin.</p>
             </div>
             
             <form id="login-form" class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Kullanıcı Seçin</label>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Kullanıcı / Rol Seçin</label>
                     <select id="login-user-select" class="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"></select>
                 </div>
                 <div>
@@ -205,13 +205,19 @@
                 const opt = document.createElement('option');
                 opt.value = user.adsoyad;
                 
-                // Parantez olmadan doğrudan temiz rol adı gösterimi
-                let cleanRole = user.rol;
-                if (user.adsoyad === 'Mehmet' || user.rol === 'bashekim') {
-                    cleanRole = 'Başhekim / Admin';
+                // Parantezsiz, sadece tam olarak istediğiniz 4 seçenek: Başhekim, Admin, SKKM, SKKM Sor.
+                let displayText = user.rol;
+                if (user.adsoyad === 'Sertaç' || user.rol === 'bashekim') {
+                    displayText = 'Başhekim';
+                } else if (user.adsoyad === 'Mehmet') {
+                    displayText = 'Admin';
+                } else if (user.rol === 'SKKM') {
+                    displayText = 'SKKM';
+                } else if (user.rol === 'SKKM Sor.') {
+                    displayText = 'SKKM Sor.';
                 }
                 
-                opt.textContent = `${user.adsoyad} - ${cleanRole}`;
+                opt.textContent = displayText;
                 loginSelectEl.appendChild(opt);
             });
         }
@@ -277,6 +283,7 @@
                 localStorage.setItem('canakkale_112_kkm_user', JSON.stringify(currentUser));
                 startAppSession();
             } else {
+                errorEl.classList.add('hidden');
                 errorEl.classList.remove('hidden');
             }
         });
