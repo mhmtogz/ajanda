@@ -217,10 +217,10 @@
         <nav class="bg-white border-b border-slate-200 shadow-xs">
             <div class="max-w-[1400px] mx-auto flex px-4 gap-4 overflow-x-auto">
                 <button onclick="switchTab('genel')" id="tab-genel" class="py-3 px-4 font-semibold text-sm border-b-2 border-rose-600 text-rose-600 flex items-center gap-2 transition whitespace-nowrap">
-                    <i class="fa-solid fa-calendar-days text-amber-500"></i> SKKM Koordinasyon Ajandası <span class="text-xs bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full">Genel</span>
+                    <i class="fa-solid fa-calendar-days text-amber-500"></i> SKKM Koordinasyon Ajandası <span class="text-xs bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full">3 Günlük</span>
                 </button>
                 <button onclick="switchTab('kisisel')" id="tab-kisisel" class="py-3 px-4 font-medium text-sm text-slate-500 hover:text-emerald-600 border-b-2 border-transparent flex items-center gap-2 transition whitespace-nowrap">
-                    <i class="fa-solid fa-user-pen"></i> <span id="kisisel-tab-title">SKKM Sorumlu Ajandası</span> <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">Özel</span>
+                    <i class="fa-solid fa-user-pen"></i> <span id="kisisel-tab-title">SKKM Sorumlu Ajandası</span> <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">5 Gün Saatli</span>
                 </button>
             </div>
         </nav>
@@ -233,22 +233,23 @@
                 </div>
                 <div class="flex items-center gap-3 flex-wrap">
                     <button id="btn-add-event" onclick="openNewEventModal()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs"><i class="fa-solid fa-square-plus"></i> Plan Ekle</button>
-                    <button onclick="changeDay(-1)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition"><i class="fa-solid fa-chevron-left mr-1"></i> Önceki Gün</button>
+                    
+                    <!-- Dinamik Navigasyon Butonları (Sekmeye Göre Değişir) -->
+                    <button id="btn-prev" onclick="navigateNav(-1)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition"><i class="fa-solid fa-chevron-left mr-1"></i> <span id="btn-prev-text">Önceki Gün</span></button>
                     <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-300 px-3 py-1 rounded-xl">
-                        <label class="text-xs font-semibold text-slate-500">Seçilen Gün:</label>
+                        <label class="text-xs font-semibold text-slate-500" id="filter-label">Tarih:</label>
                         <input type="date" id="filter-date" class="bg-transparent text-sm focus:outline-none text-slate-700 font-medium">
                     </div>
-                    <button onclick="changeDay(1)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition">Sonraki Gün <i class="fa-solid fa-chevron-right ml-1"></i></button>
+                    <button id="btn-next" onclick="navigateNav(1)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition"><span id="btn-next-text">Sonraki Gün</span> <i class="fa-solid fa-chevron-right ml-1"></i></button>
+
                     <button onclick="fetchEvents()" class="p-2 text-slate-500 hover:text-rose-600 rounded-xl border border-slate-200 bg-white" title="Yenile"><i class="fa-solid fa-rotate"></i></button>
-                    <button onclick="generateCurrentViewPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs" title="Bu 3 Günün PDF Çıktısını Al"><i class="fa-solid fa-file-arrow-down"></i> PDF İndir</button>
+                    <button onclick="generateCurrentViewPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs" title="PDF İndir"><i class="fa-solid fa-file-arrow-down"></i> PDF İndir</button>
                 </div>
             </div>
 
-            <!-- 3 Günlük Görünüm (Sol: Önceki Gün, Orta: Mevcut Gün, Sağ: Sonraki Gün) -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-grow p-4 overflow-x-auto custom-scrollbar">
-                <div id="three-days-columns-container" class="grid grid-cols-1 md:grid-cols-3 gap-4 min-w-[900px]">
-                    <!-- Günlük Kolonlar JavaScript ile Dinamik Dolacak -->
-                </div>
+            <!-- Görünüm Alanı: Genel (3 Günlük Kolonlar) veya Sorumlu (5 Günlük Saat Matrisi) -->
+            <div id="view-container" class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-grow overflow-hidden flex flex-col">
+                <!-- İçerik dinamik olarak oluşturulacak -->
             </div>
         </main>
 
@@ -270,7 +271,7 @@
 
         let usersList = [];
         let currentUser = null;
-        let currentTab = 'genel';
+        let currentTab = 'genel'; // 'genel' = 3 Günlük, 'kisisel' = 5 Günlük Saatli
         let cachedEvents = [];
         let clockInterval = null;
 
@@ -419,6 +420,10 @@
             const kisiselBtn = document.getElementById('tab-kisisel');
             const listTitle = document.getElementById('list-title');
             const addBtn = document.getElementById('btn-add-event');
+            
+            const prevText = document.getElementById('btn-prev-text');
+            const nextText = document.getElementById('btn-next-text');
+            const filterLabel = document.getElementById('filter-label');
 
             genelBtn.className = "py-3 px-4 font-medium text-sm border-b-2 border-transparent flex items-center gap-2 transition whitespace-nowrap text-slate-500 hover:text-slate-800";
             if (!kisiselBtn.classList.contains('hidden')) {
@@ -433,16 +438,24 @@
                 listTitle.textContent = "SKKM Koordinasyon 3 Günlük Ajandası";
                 addBtn.style.display = canManageGenel() ? 'flex' : 'none';
                 addBtn.className = "bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs";
+                
+                prevText.textContent = "Önceki Gün";
+                nextText.textContent = "Sonraki Gün";
+                filterLabel.textContent = "Seçilen Gün:";
             } else {
                 headerEl.classList.add('bg-emerald-600');
                 kisiselBtn.className = "py-3 px-4 font-semibold text-sm border-b-2 border-emerald-600 text-emerald-600 flex items-center gap-2 transition whitespace-nowrap";
-                listTitle.textContent = "SKKM Sorumlu 3 Günlük Ajandası";
+                listTitle.textContent = "SKKM Sorumlu Haftalık Ajandası (5 Gün Saatli)";
                 addBtn.style.display = 'flex';
                 addBtn.className = "bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs";
+                
+                prevText.textContent = "Önceki Hafta";
+                nextText.textContent = "Sonraki Hafta";
+                filterLabel.textContent = "Hafta Başı:";
             }
         }
 
-        // --- ADMIN PANELİ FONKSİYONLARI ---
+        // --- ADMIN PANELİ ---
         function toggleAdminModal(show) {
             const modal = document.getElementById('admin-modal');
             if (show) {
@@ -594,7 +607,7 @@
                 toggleAdminModal(false);
             }
         }
-        // --- ADMIN PANELİ SONU ---
+        // --- ADMIN SONU ---
 
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -649,16 +662,20 @@
             fetchEvents();
         }
 
-        // Gün değiştirme fonksiyonu (1 gün ileri veya geri)
-        function changeDay(dir) {
+        // Navigasyon (Genel sekmesinde 1 gün, Sorumlu sekmesinde 7 gün hafta kaydırır)
+        function navigateNav(dir) {
             const input = document.getElementById('filter-date');
             const d = new Date(input.value);
-            d.setDate(d.getDate() + dir);
+            if (currentTab === 'genel') {
+                d.setDate(d.getDate() + dir); // 1 gün ileri/geri
+            } else {
+                d.setDate(d.getDate() + (dir * 7)); // 1 hafta ileri/geri
+            }
             input.value = d.toISOString().split('T')[0];
             fetchEvents();
         }
 
-        // 3 Günlük Aralık Hesaplama: [Önceki Gün, Seçilen Gün (Mevcut), Sonraki Gün]
+        // Tarih Aralığı Hesaplayıcıları
         function get3DaysRange(dateStr) {
             const curr = new Date(dateStr);
             const dates = [];
@@ -667,7 +684,21 @@
                 next.setDate(curr.getDate() + i);
                 dates.push(next.toISOString().split('T')[0]);
             }
-            return dates; // [Bir Gün Önce, Mevcut Gün, Bir Gün Sonra]
+            return dates; // [Önceki Gün, Mevcut Gün, Sonraki Gün]
+        }
+
+        function getWorkWeekDates(dateStr) {
+            const curr = new Date(dateStr);
+            const day = curr.getDay();
+            const diff = curr.getDate() - day + (day === 0 ? -6 : 1); // Pazartesi
+            const monday = new Date(curr.setDate(diff));
+            const dates = [];
+            for (let i = 0; i < 5; i++) {
+                const next = new Date(monday);
+                next.setDate(monday.getDate() + i);
+                dates.push(next.toISOString().split('T')[0]);
+            }
+            return dates; // Pazartesi - Cuma (5 gün)
         }
 
         function openNewEventModal() {
@@ -754,16 +785,28 @@
             fetchEvents();
         });
 
+        // Veri Çekme (Sekmeye Göre 3 Günlük veya 5 Günlük Aralık)
         async function fetchEvents() {
             if (!currentUser) return;
-            const threeDays = get3DaysRange(document.getElementById('filter-date').value);
+            const filterVal = document.getElementById('filter-date').value;
             
-            let query = _supabase.from(NOTES_TABLE).select('*').gte('tarih', threeDays[0]).lte('tarih', threeDays[2]).eq('tur', currentTab);
+            let startDate, endDate;
+            if (currentTab === 'genel') {
+                const threeDays = get3DaysRange(filterVal);
+                startDate = threeDays[0];
+                endDate = threeDays[2];
+            } else {
+                const weekDays = getWorkWeekDates(filterVal);
+                startDate = weekDays[0];
+                endDate = weekDays[4];
+            }
+            
+            let query = _supabase.from(NOTES_TABLE).select('*').gte('tarih', startDate).lte('tarih', endDate).eq('tur', currentTab);
 
             if (currentTab === 'kisisel') {
                 if (!isFullAdmin() && !isSKKMSor()) {
                     cachedEvents = [];
-                    render3DayColumns(threeDays);
+                    renderActiveView();
                     return;
                 }
             }
@@ -771,102 +814,178 @@
             const { data, error } = await query.order('saat', { ascending: true });
             if (error) { console.error("Notlar çekilemedi:", error); return; }
             cachedEvents = data || [];
-            render3DayColumns(threeDays);
+            renderActiveView();
         }
 
-        // 3 Günlük Kolon Görünümünü ve Saat Sıralı Kartları Oluşturma
-        function render3DayColumns(threeDays) {
-            const container = document.getElementById('three-days-columns-container');
+        // Aktif Sekmeye Göre Görünümü Render Etme
+        function renderActiveView() {
+            const container = document.getElementById('view-container');
             container.innerHTML = '';
-            
-            const labels = ['Bir Gün Önce', 'Mevcut Gün (Seçilen)', 'Bir Gün Sonra'];
+            const filterVal = document.getElementById('filter-date').value;
 
-            threeDays.forEach((dStr, idx) => {
-                const isSelectedDay = (idx === 1); // Orta kolon seçilen (mevcut) gündür
-                const [y, m, d] = dStr.split('-');
+            if (currentTab === 'genel') {
+                // 3 Günlük Kolon Görünümü
+                const threeDays = get3DaysRange(filterVal);
+                container.className = "bg-white rounded-2xl shadow-sm border border-slate-200 flex-grow p-4 overflow-x-auto custom-scrollbar";
                 
-                // Haftanın gününü Türkçe almak için
-                const dateObj = new Date(dStr);
-                const dayNameTR = dateObj.toLocaleDateString('tr-TR', { weekday: 'long' });
+                const gridDiv = document.createElement('div');
+                gridDiv.className = "grid grid-cols-1 md:grid-cols-3 gap-4 min-w-[900px]";
+                
+                const labels = ['Bir Gün Önce', 'Mevcut Gün (Seçilen)', 'Bir Gün Sonra'];
+                threeDays.forEach((dStr, idx) => {
+                    const isSelectedDay = (idx === 1);
+                    const [y, m, d] = dStr.split('-');
+                    const dayNameTR = new Date(dStr).toLocaleDateString('tr-TR', { weekday: 'long' });
 
-                const colDiv = document.createElement('div');
-                colDiv.className = `bg-slate-50 border ${isSelectedDay ? 'border-rose-500 ring-2 ring-rose-400/50 shadow-sm' : 'border-slate-200'} rounded-2xl p-3 flex flex-col min-h-[550px]`;
+                    const colDiv = document.createElement('div');
+                    colDiv.className = `bg-slate-50 border ${isSelectedDay ? 'border-rose-500 ring-2 ring-rose-400/50 shadow-sm' : 'border-slate-200'} rounded-2xl p-3 flex flex-col min-h-[550px]`;
+                    
+                    colDiv.innerHTML = `
+                        <div class="text-center pb-3 mb-3 border-b border-slate-200 ${isSelectedDay ? 'bg-rose-50 text-rose-700 rounded-xl p-2' : 'text-slate-700'}">
+                            <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">${labels[idx]}</span>
+                            <span class="block text-sm font-bold">${dayNameTR}</span>
+                            <span class="text-xs font-semibold ${isSelectedDay ? 'bg-rose-600 text-white px-2 py-0.5 rounded-full inline-block mt-1' : 'text-slate-500'}">${d}.${m}.${y}</span>
+                        </div>
+                        <div class="space-y-2 flex-grow overflow-y-auto custom-scrollbar pr-1 day-cards-container-${dStr}"></div>
+                    `;
+                    gridDiv.appendChild(colDiv);
 
-                // Kolon Başlığı
-                colDiv.innerHTML = `
-                    <div class="text-center pb-3 mb-3 border-b border-slate-200 ${isSelectedDay ? 'bg-rose-50 text-rose-700 rounded-xl p-2' : 'text-slate-700'}">
-                        <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">${labels[idx]}</span>
-                        <span class="block text-sm font-bold">${dayNameTR}</span>
-                        <span class="text-xs font-semibold ${isSelectedDay ? 'bg-rose-600 text-white px-2 py-0.5 rounded-full inline-block mt-1' : 'text-slate-500'}">${d}.${m}.${y}</span>
-                    </div>
-                    <div class="space-y-2 flex-grow overflow-y-auto custom-scrollbar pr-1 day-cards-container-${dStr}"></div>
-                `;
-                container.appendChild(colDiv);
+                    const dayEvents = cachedEvents.filter(ev => ev.tarih === dStr).sort((a, b) => a.saat.localeCompare(b.saat));
+                    const cardsContainer = colDiv.querySelector(`.day-cards-container-${dStr}`);
 
-                // O güne ait kayıtları filtrele ve saat sırasına göre sırala
-                const dayEvents = cachedEvents
-                    .filter(ev => ev.tarih === dStr)
-                    .sort((a, b) => a.saat.localeCompare(b.saat));
+                    if (dayEvents.length === 0) {
+                        cardsContainer.innerHTML = `<div class="text-center text-slate-400 text-[11px] py-12 italic">Plan bulunmuyor</div>`;
+                    } else {
+                        dayEvents.forEach(ev => cardsContainer.appendChild(createEventCard(ev)));
+                    }
+                });
+                container.appendChild(gridDiv);
 
-                const cardsContainer = colDiv.querySelector(`.day-cards-container-${dStr}`);
+            } else {
+                // 5 Günlük (Pazartesi-Cuma) Saatli Matris Görünümü (index.html tarzı)
+                const weekDays = getWorkWeekDates(filterVal);
+                container.className = "bg-white rounded-2xl shadow-sm border border-slate-200 flex-grow overflow-hidden flex flex-col";
+                
+                const scrollDiv = document.createElement('div');
+                scrollDiv.className = "overflow-x-auto overflow-y-auto max-h-[700px] custom-scrollbar flex-grow";
+                
+                const table = document.createElement('table');
+                table.className = "w-full border-collapse text-left min-w-[900px]";
 
-                if (dayEvents.length === 0) {
-                    cardsContainer.innerHTML = `<div class="text-center text-slate-400 text-[11px] py-12 italic">Bu güne ait plan bulunmuyor</div>`;
-                } else {
-                    dayEvents.forEach(ev => {
-                        const card = document.createElement('div');
-                        let bg = 'bg-sky-50 text-sky-900 border-sky-200';
-                        let statusBadge = `<span class="text-[9px] bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded-full font-bold">${escapeHtml(ev.durum || 'Planlandı')}</span>`;
+                // Tablo Başlığı
+                const thead = document.createElement('thead');
+                const headerTr = document.createElement('tr');
+                headerTr.className = "bg-slate-50 border-b border-slate-200 sticky top-0 z-20";
+                
+                let headerHtml = `<th class="p-3 text-xs font-bold text-slate-500 uppercase border-r border-slate-200 bg-slate-100 text-center w-24">Saat</th>`;
+                const dayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
+                weekDays.forEach((dStr, idx) => {
+                    const isToday = (dStr === todayStr);
+                    const [y, m, d] = dStr.split('-');
+                    headerHtml += `
+                        <th class="p-3 text-center border-r border-slate-200 ${isToday ? 'text-emerald-700 bg-emerald-50' : 'text-slate-700'} min-w-[180px]">
+                            <span class="block text-xs font-bold">${dayNames[idx]}</span>
+                            <span class="text-[11px] font-medium ${isToday ? 'bg-emerald-600 text-white px-2 py-0.5 rounded-full inline-block mt-0.5' : 'text-slate-500'}">${d}.${m}.${y}</span>
+                        </th>
+                    `;
+                });
+                headerTr.innerHTML = headerHtml;
+                thead.appendChild(headerTr);
+                table.appendChild(thead);
 
-                        if (ev.durum === 'Gerçekleşti') {
-                            bg = 'bg-emerald-50 text-emerald-900 border-emerald-200';
-                            statusBadge = `<span class="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full font-bold">Gerçekleşti</span>`;
-                        } else if (ev.durum === 'İptal') {
-                            bg = 'bg-rose-50 text-rose-900 border-rose-200';
-                            statusBadge = `<span class="text-[9px] bg-rose-100 text-rose-800 px-1.5 py-0.5 rounded-full font-bold">İptal</span>`;
-                        }
+                // Tablo Gövdesi (Saat Dilimleri: 08:00 - 17:30)
+                const tbody = document.createElement('tbody');
+                tbody.className = "divide-y divide-slate-100";
 
-                        card.className = `p-2.5 ${bg} border rounded-xl text-xs space-y-1.5 relative group/card shadow-2xs transition hover:shadow-md`;
-
-                        let canEdit = false;
-                        let canDelete = false;
-
-                        if (isFullAdmin()) {
-                            canEdit = true;
-                            canDelete = true;
-                        } else if (isSKKMSor()) {
-                            canEdit = true;
-                            canDelete = true;
-                        } else if (currentUser.birim === 'SKKM' && currentTab === 'genel') {
-                            canEdit = true;
-                            canDelete = false;
-                        }
-
-                        let actions = '';
-                        if (canEdit || canDelete) {
-                            actions = `<div class="absolute top-1.5 right-1.5 flex items-center gap-1 opacity-0 group-hover/card:opacity-100 transition bg-white/90 p-1 rounded-lg shadow-xs">`;
-                            if (canEdit) {
-                                actions += `<button onclick="event.stopPropagation(); editEv(${ev.id})" class="text-blue-500 hover:text-blue-700 p-0.5" title="${currentUser.birim === 'SKKM' ? 'Durum Güncelle' : 'Düzenle'}"><i class="fa-solid fa-pen text-[11px]"></i></button>`;
-                            }
-                            if (canDelete) {
-                                actions += `<button onclick="event.stopPropagation(); deleteEv(${ev.id})" class="text-rose-500 hover:text-rose-700 p-0.5" title="Sil"><i class="fa-solid fa-trash-can text-[11px]"></i></button>`;
-                            }
-                            actions += `</div>`;
-                        }
-
-                        card.innerHTML = `
-                            <div class="flex justify-between items-center pr-6">
-                                <span class="font-bold text-[11px] text-indigo-700 bg-white/80 px-1.5 py-0.5 rounded shadow-2xs"><i class="fa-regular fa-clock mr-1 text-[10px]"></i>${ev.saat}</span>
-                                ${statusBadge}
-                            </div>
-                            <div class="text-[11px] font-semibold text-slate-700"><i class="fa-regular fa-user mr-1 text-[9px]"></i>${escapeHtml(ev.ekleyen)}</div>
-                            <p class="text-[11px] leading-relaxed whitespace-pre-wrap">${escapeHtml(ev.aciklama)}</p>
-                            ${actions}
-                        `;
-                        cardsContainer.appendChild(card);
-                    });
+                const timeSlots = [];
+                for (let h = 8; h <= 17; h++) {
+                    const hr = h < 10 ? '0' + h : '' + h;
+                    timeSlots.push(`${hr}:00`, `${hr}:15`, `${hr}:30`, `${hr}:45`);
                 }
-            });
+                timeSlots.push('17:30');
+
+                timeSlots.forEach(time => {
+                    const row = document.createElement('tr');
+                    row.className = "hover:bg-slate-50/80 transition";
+                    let rowHtml = `<td class="p-2 text-center text-xs font-bold text-slate-500 border-r border-slate-200 bg-slate-50">${time}</td>`;
+                    
+                    weekDays.forEach(dStr => {
+                        rowHtml += `
+                            <td class="p-1.5 border-r border-slate-200 align-top h-16 hover:bg-emerald-50/35 transition relative">
+                                <div class="space-y-1 z-10 relative slot-container-${dStr}-${time.replace(':', '')}"></div>
+                            </td>
+                        `;
+                    });
+                    row.innerHTML = rowHtml;
+                    tbody.appendChild(row);
+                });
+
+                table.appendChild(tbody);
+                scrollDiv.appendChild(table);
+                container.appendChild(scrollDiv);
+
+                // Kartları ilgili saat yuvalarına yerleştir
+                cachedEvents.forEach(ev => {
+                    const timeSafe = ev.saat.replace(':', '');
+                    const slotContainer = container.querySelector(`.slot-container-${ev.tarih}-${timeSafe}`);
+                    if (slotContainer) {
+                        slotContainer.appendChild(createEventCard(ev, true));
+                    }
+                });
+            }
+        }
+
+        // Ortak Kart Oluşturucu
+        function createEventCard(ev, isMatrix = false) {
+            const card = document.createElement('div');
+            let bg = 'bg-sky-50 text-sky-900 border-sky-200';
+            let statusBadge = `<span class="text-[9px] bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded-full font-bold">${escapeHtml(ev.durum || 'Planlandı')}</span>`;
+
+            if (ev.durum === 'Gerçekleşti') {
+                bg = 'bg-emerald-50 text-emerald-900 border-emerald-200';
+                statusBadge = `<span class="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full font-bold">Gerçekleşti</span>`;
+            } else if (ev.durum === 'İptal') {
+                bg = 'bg-rose-50 text-rose-900 border-rose-200';
+                statusBadge = `<span class="text-[9px] bg-rose-100 text-rose-800 px-1.5 py-0.5 rounded-full font-bold">İptal</span>`;
+            }
+
+            card.className = `p-1.5 ${bg} border rounded-lg text-xs space-y-1 relative group/card shadow-2xs`;
+
+            let canEdit = false;
+            let canDelete = false;
+
+            if (isFullAdmin() || isSKKMSor()) {
+                canEdit = true;
+                canDelete = true;
+            } else if (currentUser.birim === 'SKKM' && currentTab === 'genel') {
+                canEdit = true;
+                canDelete = false;
+            }
+
+            let actions = '';
+            if (canEdit || canDelete) {
+                actions = `<div class="absolute top-1 right-1 flex items-center gap-1 opacity-0 group-hover/card:opacity-100 transition bg-white/90 p-0.5 rounded shadow-xs">`;
+                if (canEdit) {
+                    actions += `<button onclick="event.stopPropagation(); editEv(${ev.id})" class="text-blue-500 hover:text-blue-700 p-0.5" title="Düzenle"><i class="fa-solid fa-pen text-[10px]"></i></button>`;
+                }
+                if (canDelete) {
+                    actions += `<button onclick="event.stopPropagation(); deleteEv(${ev.id})" class="text-rose-500 hover:text-rose-700 p-0.5" title="Sil"><i class="fa-solid fa-trash-can text-[10px]"></i></button>`;
+                }
+                actions += `</div>`;
+            }
+
+            const timeDisplay = isMatrix ? '' : `<span class="font-bold text-[10px] text-indigo-700 bg-white/80 px-1 rounded"><i class="fa-regular fa-clock mr-0.5"></i>${ev.saat}</span>`;
+
+            card.innerHTML = `
+                <div class="flex justify-between items-center pr-6">
+                    ${timeDisplay}
+                    <span class="font-semibold text-[11px]"><i class="fa-regular fa-user mr-0.5 text-[9px]"></i>${escapeHtml(ev.ekleyen)}</span>
+                    ${statusBadge}
+                </div>
+                <p class="text-[11px] leading-tight whitespace-pre-wrap">${escapeHtml(ev.aciklama)}</p>
+                ${actions}
+            `;
+            return card;
         }
 
         window.editEv = function(id) {
@@ -888,12 +1007,12 @@
             }
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('l', 'mm', 'a4');
-            const threeDays = get3DaysRange(document.getElementById('filter-date').value);
+            const titleText = currentTab === 'genel' ? "KKM 3 GUNLUK RAPORU" : "SKKM SORUMLU 5 GUNLUK RAPORU";
 
             doc.setFont("helvetica", "bold");
             doc.setFontSize(13);
             doc.setTextColor(30, 41, 59);
-            doc.text(fixTurkishChars("CANAKKALE IL AMBULANS SERVISI KKM 3 GUNLUK RAPORU"), 14, 12);
+            doc.text(fixTurkishChars(`CANAKKALE IL AMBULANS SERVISI - ${titleText}`), 14, 12);
 
             let startY = 25;
             cachedEvents.forEach(ev => {
@@ -906,7 +1025,7 @@
                 doc.text(fixTurkishChars(`${ev.ekleyen}: ${ev.aciklama} (${ev.durum || 'Planlandi'})`), 85, startY + 7);
                 startY += 14;
             });
-            doc.save(`Canakkale_112_KKM_3Gun_Rapor_${threeDays[1]}.pdf`);
+            doc.save(`Canakkale_112_KKM_Rapor.pdf`);
         }
 
         document.getElementById('filter-date').addEventListener('change', fetchEvents);
