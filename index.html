@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çanakkale 112 Kurumsal Ajanda V4.0 - Bulut Tabanlı</title>
+    <title>Çanakkale 112 Kurumsal Ajanda V4.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -23,7 +23,7 @@
                     <i class="fa-solid fa-hospital-user"></i>
                 </div>
                 <h2 class="text-xl font-bold text-slate-800">Kurumsal Ajanda Girişi</h2>
-                <p class="text-xs text-slate-500 mt-1">Lütfen adınızı seçin ve şifrenizi girin.<br><span class="text-[11px] text-indigo-600 font-medium">(İlk şifre kuralı: Adınızın baş harfi + 112, Örn: m112)</span></p>
+                <p class="text-xs text-slate-500 mt-1">Lütfen adınızı seçin ve şifrenizi girin.</p>
             </div>
             
             <form id="login-form" class="space-y-4">
@@ -66,17 +66,16 @@
         </div>
     </div>
 
-    <!-- ADMIN PANELİ MODALI (Supabase Bağlı) -->
+    <!-- ADMIN PANELİ MODALI -->
     <div id="admin-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 border border-slate-200 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
                 <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-user-shield text-amber-600"></i> Yönetici Paneli (Bulut Veritabanı)
+                    <i class="fa-solid fa-user-shield text-amber-600"></i> Yönetici Paneli (Personel Yönetimi)
                 </h3>
                 <button onclick="toggleAdminModal(false)" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
 
-            <!-- Yeni Personel Ekleme Formu -->
             <form id="admin-add-user-form" class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 space-y-3">
                 <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600"><i class="fa-solid fa-user-plus mr-1"></i> Yeni Personel Tanımla</h4>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -87,6 +86,7 @@
                         <option value="Personel Birimi">Personel Birimi</option>
                         <option value="Kalite Birimi">Kalite Birimi</option>
                         <option value="Disiplin Birimi">Disiplin Birimi</option>
+                        <option value="Teknik Birim">Teknik Birim</option>
                     </select>
                     <input type="text" id="admin-new-pass" placeholder="Şifre" required class="px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white">
                 </div>
@@ -95,11 +95,8 @@
                 </button>
             </form>
 
-            <!-- Mevcut Kullanıcılar Listesi -->
-            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2"><i class="fa-solid fa-users mr-1"></i> Buluttaki Kayıtlı Personel</h4>
-            <div id="admin-user-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
-                <!-- JS ile dolacak -->
-            </div>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2"><i class="fa-solid fa-users mr-1"></i> Kayıtlı Personel Listesi</h4>
+            <div id="admin-user-list" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
         </div>
     </div>
 
@@ -124,6 +121,7 @@
                     <option value="Bilgi Sistemleri Birimi">Bilgi Sistemleri Birimi</option>
                     <option value="Kalite Birimi">Kalite Birimi</option>
                     <option value="Disiplin Birimi">Disiplin Birimi</option>
+                    <option value="Teknik Birim">Teknik Birim</option>
                 </select>
             </div>
 
@@ -201,6 +199,7 @@
                         <option value="Bilgi Sistemleri Birimi">Bilgi Sistemleri Birimi</option>
                         <option value="Kalite Birimi">Kalite Birimi</option>
                         <option value="Disiplin Birimi">Disiplin Birimi</option>
+                        <option value="Teknik Birim">Teknik Birim</option>
                     </select>
                 </div>
                 <div class="flex items-center gap-3">
@@ -248,7 +247,6 @@
         const todayStr = new Date().toISOString().split('T')[0];
         document.getElementById('filter-date').value = todayStr;
 
-        // Supabase'den kullanıcıları yükle
         async function loadUsersFromSupabase() {
             const { data, error } = await _supabase.from('kullanicilar').select('*');
             if (error) {
@@ -280,7 +278,6 @@
 
             const foundUser = usersList.find(u => u.adsoyad === selectedName);
 
-            // Özel Admin Kuralı: Mehmet veya şifre 1717 kontrolü
             if (foundUser && (foundUser.sifre === enteredPass || (foundUser.adsoyad === 'Mehmet' && enteredPass === '1717'))) {
                 currentUser = {
                     adsoyad: foundUser.adsoyad,
@@ -295,7 +292,6 @@
 
                 document.getElementById('current-user-badge').textContent = `Aktif: ${currentUser.adsoyad} (${currentUser.birim})`;
                 
-                // Admin butonu (Mehmet için görünür)
                 if (currentUser.adsoyad === 'Mehmet') {
                     document.getElementById('admin-btn').classList.remove('hidden');
                 } else {
@@ -329,7 +325,6 @@
             }
         }
 
-        // Şifre Güncelleme (Supabase'e kaydeder)
         document.getElementById('password-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const newPass = document.getElementById('new-pass').value.trim().toLowerCase();
@@ -349,7 +344,6 @@
             loadUsersFromSupabase();
         });
 
-        // Admin Paneli
         function toggleAdminModal(show) {
             const modal = document.getElementById('admin-modal');
             if (show) {
@@ -377,7 +371,6 @@
             });
         }
 
-        // Supabase'e Yeni Kullanıcı Ekleme
         document.getElementById('admin-add-user-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const adsoyad = document.getElementById('admin-new-name').value.trim();
