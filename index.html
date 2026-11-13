@@ -3,24 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çanakkale 112 Kurumsal Ajanda V5.6</title>
+    <title>Çanakkale 112 Kurumsal Ajanda V5.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- jsPDF Kütüphanesi (Doğrudan PDF İndirmek İçin) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style> 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; } 
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-
-        /* PDF / Yazdırma Modu Stilleri */
-        @media print {
-            body { background: white !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            header, nav, .no-print, button { display: none !important; }
-            .print-page-container { page-break-after: always; break-after: page; display: block !important; width: 100%; margin-top: 10px; }
-            table { width: 100% !important; border-collapse: collapse !important; font-size: 10px !important; table-layout: fixed !important; }
-            th, td { border: 1px solid #94a3b8 !important; padding: 6px !important; color: black !important; vertical-align: top !important; word-wrap: break-word !important; }
-            th:first-child, td:first-child { width: 65px !important; text-align: center !important; }
-        }
     </style>
 </head>
 <body id="page-body" class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between transition-colors duration-300">
@@ -77,7 +69,6 @@
     <!-- ADMIN & PDF / TEMİZLEME PANELİ MODALI -->
     <div id="admin-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 border border-slate-200 max-h-[90vh] overflow-y-auto">
-            <!-- Üst Kısım: Başlık ve Canlı Tarih/Saat Rozeti -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 pb-3 border-b border-slate-100 gap-2">
                 <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
                     <i class="fa-solid fa-user-shield text-amber-600"></i> Yönetici ve Veri Yönetimi
@@ -93,7 +84,7 @@
             <!-- PDF YEDEK ALMA VE VERİ TEMİZLEME BÖLÜMÜ -->
             <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 mb-6 space-y-3">
                 <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-900"><i class="fa-solid fa-file-pdf mr-1"></i> Aylık PDF Raporu ve Veri Temizliği</h4>
-                <p class="text-xs text-indigo-700">Önce PDF yedeğinizi indirin, ardından "Seçilen Ayı Temizle" butonuna basarak veritabanını şişmekten kurtarın.</p>
+                <p class="text-xs text-indigo-700">Önce "Doğrudan PDF İndir" ile yedeğinizi alın, ardından "Seçilen Ayı Temizle" ile veritabanını rahatlatın.</p>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
@@ -110,8 +101,8 @@
                 </div>
 
                 <div class="flex gap-2 pt-1">
-                    <button type="button" onclick="generateMonthlyPDF()" class="w-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1">
-                        <i class="fa-solid fa-download"></i> PDF İndir / Yazdır
+                    <button type="button" onclick="generateMonthlyPDFDirect()" class="w-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-file-arrow-down"></i> Doğrudan PDF İndir
                     </button>
                     <button type="button" onclick="clearMonthData()" class="w-1/2 bg-rose-600 hover:bg-rose-700 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1 shadow-xs">
                         <i class="fa-solid fa-trash-arrow-up"></i> Seçilen Ayı Temizle
@@ -135,9 +126,6 @@
             <div id="admin-user-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
         </div>
     </div>
-
-    <!-- GİZLİ YAZDIRMA / PDF ALANI -->
-    <div id="print-area" class="hidden"></div>
 
     <!-- PLAN EKLEME / DÜZENLEME MODALI -->
     <div id="event-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
@@ -266,7 +254,7 @@
         </main>
 
         <footer class="text-center py-4 text-xs text-slate-400 border-t border-slate-200 mt-6 bg-white">
-            Çanakkale İl Ambulans Servisi Başhekimliği &bull; Kurumsal Masa Ajandası V5.6
+            Çanakkale İl Ambulans Servisi Başhekimliği &bull; Kurumsal Masa Ajandası V5.7
         </footer>
     </div>
 
@@ -299,7 +287,6 @@
         document.getElementById('filter-date').value = todayStr;
         document.getElementById('pdf-report-month').value = todayStr.substring(0, 7);
 
-        // Canlı Saat Fonksiyonu
         function updateLiveClock() {
             const clockTextEl = document.getElementById('clock-text');
             if (!clockTextEl) return;
@@ -841,29 +828,16 @@
             }
         }
 
-        // AYLIK PDF RAPORU OLUŞTURMA VE SAYFA SAYFA BÖLME
-        async function generateMonthlyPDF() {
+        // DOĞRUDAN jsPDF İLE TARAYICI PENCERESİ AÇMADAN PDF DOSYASI İNDİRME
+        async function generateMonthlyPDFDirect() {
             const monthInput = document.getElementById('pdf-report-month').value;
             const targetType = document.getElementById('pdf-report-target').value;
             if (!monthInput) { alert("Lütfen bir ay seçin."); return; }
 
             const [year, month] = monthInput.split('-');
-            const firstDayOfMonth = new Date(year, month - 1, 1);
-            const lastDayOfMonth = new Date(year, month, 0);
-
-            let curr = new Date(firstDayOfMonth);
-            const day = curr.getDay();
-            const diffToMonday = curr.getDate() - day + (day === 0 ? -6 : 1);
-            curr.setDate(diffToMonday);
-
-            const mondaysOfWeeks = [];
-            while (curr <= lastDayOfMonth) {
-                mondaysOfWeeks.push(new Date(curr).toISOString().split('T')[0]);
-                curr.setDate(curr.getDate() + 7);
-            }
-
             const startDateStr = `${year}-${month}-01`;
-            const endDateStr = `${year}-${month}-${lastDayOfMonth.getDate()}`;
+            const lastDay = new Date(year, month, 0).getDate();
+            const endDateStr = `${year}-${month}-${lastDay}`;
 
             let query = _supabase.from('ajanda_notlari').select('*')
                 .gte('tarih', startDateStr)
@@ -875,89 +849,64 @@
                 query = query.eq('tur', 'birim');
             }
 
-            const { data: monthEvents, error } = await query;
+            const { data: monthEvents, error } = await query.order('tarih', { ascending: true }).order('saat', { ascending: true });
             if (error) { alert("Veriler çekilemedi: " + error.message); return; }
 
-            const printArea = document.getElementById('print-area');
-            printArea.innerHTML = '';
+            if (!monthEvents || monthEvents.length === 0) {
+                alert("Seçilen ay ve kriterde kayıtlı plan bulunamadı.");
+                return;
+            }
 
-            const titleText = targetType === 'bashekim' ? 'Başhekimlik Genel Masa Ajandası Raporu' : 'Tüm Birimler Ortak Ajandası Raporu';
+            // jsPDF nesnesini başlat
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+
             const monthNamesTR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
-            const monthTitleStr = `${monthNamesTR[parseInt(month)-1]} ${year}`;
+            const titleStr = targetType === 'bashekim' ? 'Başhekimlik Genel Ajandası' : 'Tüm Birimler Ortak Ajandası';
 
-            mondaysOfWeeks.forEach((mondayStr, weekIndex) => {
-                const weekDates = [];
-                const mDate = new Date(mondayStr);
-                for (let i = 0; i < 5; i++) {
-                    const d = new Date(mDate);
-                    d.setDate(mDate.getDate() + i);
-                    weekDates.push(d.toISOString().split('T')[0]);
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(14);
+            doc.text("CANAKKALE IL AMBULANS SERVISI BASHEKIMLIGI", 14, 15);
+            
+            doc.setFontSize(11);
+            doc.setTextColor(79, 70, 229);
+            doc.text(`${titleStr} - ${monthNamesTR[parseInt(month)-1]} ${year} Raporu`, 14, 22);
+
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Olusturma Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 14, 28);
+
+            let startY = 35;
+            doc.setFontSize(9);
+
+            // Sadece dolu olan kayıtları liste formatında sayfaya dök
+            monthEvents.forEach((ev, idx) => {
+                if (startY > 275) {
+                    doc.addPage();
+                    startY = 20;
                 }
 
-                const pageDiv = document.createElement('div');
-                pageDiv.className = 'print-page-container';
+                const [y, m, d] = ev.tarih.split('-');
+                const formattedDate = `${d}.${m}.${y}`;
+                const birimInfo = (targetType === 'tum_birimler' && ev.hedef_birim) ? `[${ev.hedef_birim}] ` : '';
 
-                let html = `
-                    <div style="margin-bottom: 12px; border-bottom: 2px solid #333; padding-bottom: 8px;">
-                        <h2 style="font-size: 14px; font-weight: bold; margin: 0;">ÇANAKKALE İL AMBULANS SERVİSİ BAŞHEKİMLİĞİ</h2>
-                        <h3 style="font-size: 12px; margin: 2px 0; color: #4f46e5;">${titleText} (${monthTitleStr} - ${weekIndex + 1}. Hafta)</h3>
-                        <p style="font-size: 9px; margin: 0; color: #666;">Rapor Tarihi: ${weekDates[0].split('-').reverse().join('.')} - ${weekDates[4].split('-').reverse().join('.')}</p>
-                    </div>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 9px; table-layout: fixed;">
-                        <thead>
-                            <tr style="background-color: #f1f5f9;">
-                                <th style="border: 1px solid #94a3b8; padding: 4px; width: 60px; text-align: center;">Saat</th>
-                `;
+                doc.setFillColor(248, 250, 252);
+                doc.setDrawColor(203, 213, 225);
+                doc.roundedRect(14, startY, 182, 12, 1, 1, 'FD');
 
-                const dayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
-                weekDates.forEach((dStr, dIdx) => {
-                    const [y, m, d] = dStr.split('-');
-                    html += `<th style="border: 1px solid #94a3b8; padding: 4px; text-align: center;">${dayNames[dIdx]}<br><span style="font-weight:normal; font-size:8px;">${d}.${m}.${y}</span></th>`;
-                });
-                html += `</tr></thead><tbody>`;
+                doc.setFont("helvetica", "bold");
+                doc.setTextColor(30, 41, 59);
+                doc.text(`${formattedDate} - ${ev.saat}`, 18, startY + 7);
 
-                const timeSlots = [];
-                for (let h = 8; h <= 17; h++) {
-                    const hourStr = h < 10 ? '0' + h : '' + h;
-                    timeSlots.push(`${hourStr}:00`, `${hourStr}:15`, `${hourStr}:30`, `${hourStr}:45`);
-                }
-                timeSlots.push('17:30');
+                doc.setFont("helvetica", "normal");
+                doc.text(`${birimInfo}${ev.ekleyen_kisi}: ${ev.aciklama} (${ev.durum || 'Planlandı'})`, 60, startY + 7);
 
-                timeSlots.forEach(time => {
-                    html += `<tr><td style="border: 1px solid #94a3b8; padding: 3px; text-align: center; font-weight: bold; background-color: #f8fafc;">${time}</td>`;
-                    
-                    weekDates.forEach(dateStr => {
-                        const matchingEvents = (monthEvents || []).filter(ev => ev.tarih === dateStr && ev.saat === time);
-                        let cellContent = '';
-                        matchingEvents.forEach(ev => {
-                            let unitTag = (targetType === 'tum_birimler' && ev.hedef_birim) ? `<b>[${ev.hedef_birim}]</b> ` : '';
-                            
-                            let bgStyle = 'background-color: #f0f9ff; color: #0369a1; border-color: #bae6fd;';
-                            if (ev.durum === 'Gerçekleşti') {
-                                bgStyle = 'background-color: #ecfdf5; color: #047857; border-color: #a7f3d0;';
-                            } else if (ev.durum === 'İptal') {
-                                bgStyle = 'background-color: #fff1f2; color: #be123c; border-color: #fecdd3;';
-                            }
-
-                            cellContent += `
-                                <div style="margin-bottom: 2px; padding: 3px; border: 1px solid; border-radius: 4px; ${bgStyle}">
-                                    ${unitTag}<b>${ev.ekleyen_kisi}:</b> ${ev.aciklama}
-                                </div>
-                            `;
-                        });
-                        html += `<td style="border: 1px solid #94a3b8; padding: 3px; vertical-align: top; height: 30px;">${cellContent}</td>`;
-                    });
-                    html += `</tr>`;
-                });
-
-                html += `</tbody></table>`;
-                pageDiv.innerHTML = html;
-                printArea.appendChild(pageDiv);
+                startY += 15;
             });
 
-            printArea.classList.remove('hidden');
-            window.print();
-            printArea.classList.add('hidden');
+            // Doğrudan PDF dosyasını indir
+            doc.save(`Canakkale_112_Ajanda_Raporu_${year}_${month}.pdf`);
+            toggleAdminModal(false);
         }
 
         async function clearMonthData() {
