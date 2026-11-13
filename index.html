@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çanakkale 112 Kurumsal Ajanda V5.0</title>
+    <title>Çanakkale 112 Kurumsal Ajanda V5.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -218,7 +218,7 @@
         </main>
 
         <footer class="text-center py-4 text-xs text-slate-400 border-t border-slate-200 mt-6 bg-white">
-            Çanakkale İl Ambulans Servisi Başhekimliği &bull; Kurumsal Masa Ajandası V5.0
+            Çanakkale İl Ambulans Servisi Başhekimliği &bull; Kurumsal Masa Ajandası V5.1
         </footer>
     </div>
 
@@ -296,6 +296,9 @@
             if (error) { console.error("Kullanıcılar yüklenemedi:", error); return; }
             usersList = data || [];
             populateLoginSelect();
+
+            // Sayfa yüklendiğinde hafızada (localStorage) açık oturum var mı kontrol et
+            checkStoredSession();
         }
 
         function populateLoginSelect() {
@@ -310,6 +313,42 @@
         }
         loadUsersFromSupabase();
 
+        // Hafızadaki oturumu kontrol etme fonksiyonu
+        function checkStoredSession() {
+            const savedUser = localStorage.getItem('canakkale_112_user');
+            if (savedUser) {
+                try {
+                    const parsedUser = JSON.parse(savedUser);
+                    // Veritabanındaki güncel kullanıcı listesinde hala var mı teyit et
+                    const found = usersList.find(u => u.adsoyad === parsedUser.adsoyad);
+                    if (found) {
+                        currentUser = { adsoyad: found.adsoyad, birim: found.birim, rol: found.rol };
+                        startAppSession();
+                    }
+                } catch (e) {
+                    localStorage.removeItem('canakkale_112_user');
+                }
+            }
+        }
+
+        function startAppSession() {
+            document.getElementById('login-modal').classList.add('hidden');
+            const appContainer = document.getElementById('app-container');
+            appContainer.classList.remove('hidden');
+            appContainer.classList.add('flex');
+
+            document.getElementById('current-user-badge').textContent = `Aktif: ${currentUser.adsoyad} (${currentUser.birim})`;
+            
+            if (currentUser.adsoyad === 'Mehmet') {
+                document.getElementById('admin-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('admin-btn').classList.add('hidden');
+            }
+
+            updateThemeAndPermissions();
+            fetchEvents();
+        }
+
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const selectedName = document.getElementById('login-user-select').value;
@@ -320,22 +359,11 @@
 
             if (foundUser && (foundUser.sifre === enteredPass || (foundUser.adsoyad === 'Mehmet' && enteredPass === '1717'))) {
                 currentUser = { adsoyad: foundUser.adsoyad, birim: foundUser.birim, rol: foundUser.rol };
-
-                document.getElementById('login-modal').classList.add('hidden');
-                const appContainer = document.getElementById('app-container');
-                appContainer.classList.remove('hidden');
-                appContainer.classList.add('flex');
-
-                document.getElementById('current-user-badge').textContent = `Aktif: ${currentUser.adsoyad} (${currentUser.birim})`;
                 
-                if (currentUser.adsoyad === 'Mehmet') {
-                    document.getElementById('admin-btn').classList.remove('hidden');
-                } else {
-                    document.getElementById('admin-btn').classList.add('hidden');
-                }
+                // Başarılı girişte oturumu tarayıcı hafızasına kaydet
+                localStorage.setItem('canakkale_112_user', JSON.stringify(currentUser));
 
-                updateThemeAndPermissions();
-                fetchEvents();
+                startAppSession();
             } else {
                 errorEl.classList.remove('hidden');
             }
@@ -343,6 +371,9 @@
 
         function logout() {
             currentUser = null;
+            // Çıkış yapıldığında hafızadaki oturumu sil
+            localStorage.removeItem('canakkale_112_user');
+
             document.getElementById('login-pass').value = '';
             document.getElementById('login-error').classList.add('hidden');
             const appContainer = document.getElementById('app-container');
