@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çanakkale 112 Kurumsal Ajanda-Agonya V1.1</title>
+    <title>Çanakkale 112 Kurumsal Ajanda </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -81,7 +81,7 @@
                 </div>
             </div>
 
-            <!-- YENİ ENTEGRE EDİLEN KAPSAMLI AYLIK PDF RAPORU -->
+            <!-- KAPSAMLI AYLIK PDF RAPORU -->
             <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 mb-6 space-y-3">
                 <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-900"><i class="fa-solid fa-file-pdf mr-1"></i> Kapsamlı Aylık Yatay PDF Raporu</h4>
                 <p class="text-xs text-indigo-700">İlk sayfada Başhekimlik ortak ajandası, devamında ise her birimin ayrı sayfalarda listelendiği tam teşekküllü yatay PDF raporunu indirin.</p>
@@ -260,7 +260,7 @@
         </main>
 
         <footer class="text-center py-4 text-xs text-slate-400 border-t border-slate-200 mt-6 bg-white">
-            Çanakkale İl Ambulans Servisi Başhekimliği &bull; Kurumsal Masa Ajandası V6.1
+            Çanakkale İl Ambulans Servisi Başhekimliği &bull; Kurumsal Masa Ajandası * Agonya V1.1
         </footer>
     </div>
 
@@ -747,7 +747,7 @@
                     </th>
                 `;
             });
-            headerHtml.innerHTML = headerHtml;
+            headerEl.innerHTML = headerHtml;
 
             const timeSlots = [];
             for (let h = 8; h <= 17; h++) {
@@ -912,7 +912,7 @@
             doc.save(`Canakkale_112_Haftalik_Ajanda_${weekDays[0]}.pdf`);
         }
 
-        // --- ADMIN İÇİNDEKİ KAPSAMLI AYLIK PDF RAPORU (İLK SAYFA BAŞHEKİMLİK ORTAK, DEVAMINDA BİRİMLER AYRI AYRI) ---
+        // --- ADMIN İÇİNDEKİ KAPSAMLI AYLIK PDF RAPORU ---
         async function generateComprehensiveMonthlyPDF() {
             const monthInput = document.getElementById('pdf-report-month').value;
             if (!monthInput) { alert("Lütfen bir ay seçin."); return; }
@@ -935,7 +935,6 @@
             const startDateStr = `${year}-${month}-01`;
             const endDateStr = `${year}-${month}-${lastDayOfMonth.getDate()}`;
 
-            // Veritabanından hem başhekimlik hem tüm birimler verilerini çek
             const { data: allEvents, error } = await _supabase.from('ajanda_notlari').select('*')
                 .gte('tarih', startDateStr)
                 .lte('tarih', endDateStr);
@@ -943,13 +942,13 @@
             if (error) { alert("Veriler çekilemedi: " + error.message); return; }
 
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4'); // Yatay A4
+            const doc = new jsPDF('l', 'mm', 'a4');
 
             const monthNamesTR = ["Ocak", "Subat", "Mart", "Nisan", "Mayis", "Haziran", "Temmuz", "Agustos", "Eylul", "Ekim", "Kasim", "Aralik"];
             const monthTitleStr = `${monthNamesTR[parseInt(month)-1]} ${year}`;
             const dayNamesTR = ['Pazartesi', 'Sali', 'Carsamba', 'Persembe', 'Cuma'];
 
-            // 1. AŞAMA: İLK SAYFA(LAR) - BAŞHEKİMLİK GENEL ORTAK AJANDASI
+            // 1. İLK SAYFALAR: BAŞHEKİMLİK GENEL ORTAK AJANDASI
             mondaysOfWeeks.forEach((mondayStr, weekIndex) => {
                 const weekDates = [];
                 const mDate = new Date(mondayStr);
@@ -1010,7 +1009,7 @@
                 }
             });
 
-            // 2. AŞAMA: DEVAM EDEN SAYFALAR - HER BİRİM İÇİN AYRI AYRI SAYFALAR
+            // 2. DEVAM EDEN SAYFALAR: HER BİRİM İÇİN AYRI SAYFALAR
             birimlerListesi.forEach(birimName => {
                 mondaysOfWeeks.forEach((mondayStr, weekIndex) => {
                     const weekDates = [];
@@ -1022,7 +1021,7 @@
                     }
 
                     const birimWeekEvents = (allEvents || []).filter(ev => ev.tur === 'birim' && ev.hedef_birim === birimName && weekDates.includes(ev.tarih));
-                    if (birimWeekEvents.length === 0) return; // Boş olan birim haftalarını atla
+                    if (birimWeekEvents.length === 0) return;
 
                     doc.addPage();
 
@@ -1032,7 +1031,7 @@
                     doc.text(fixTurkishChars("CANAKKALE IL AMBULANS SERVISI BASHEKIMLIGI"), 14, 12);
 
                     doc.setFontSize(10);
-                    doc.setTextColor(217, 119, 6); // Amber tonu
+                    doc.setTextColor(217, 119, 6);
                     doc.text(fixTurkishChars(`${birimName} Ajandasi (${monthTitleStr} - ${weekIndex + 1}. Hafta)`), 14, 18);
 
                     doc.setFontSize(8);
@@ -1065,7 +1064,6 @@
                 });
             });
 
-            // Tek bir bütün PDF dosyası olarak indir
             doc.save(`Canakkale_112_Kurumsal_Tam_Ajanda_Raporu_${year}_${month}.pdf`);
             toggleAdminModal(false);
         }
