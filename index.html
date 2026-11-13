@@ -73,7 +73,7 @@
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 border border-slate-200 max-h-[90vh] overflow-y-auto">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 pb-3 border-b border-slate-100 gap-2">
                 <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-user-shield text-amber-600"></i> Yönetici, Aylık PDF Raporu ve Veri Yönetimi
+                    <i class="fa-solid fa-user-shield text-amber-600"></i> Yönetici, Personel ve Veri Yönetimi
                 </h3>
                 <div class="flex items-center justify-between w-full sm:w-auto gap-3">
                     <div id="admin-live-clock" class="text-xs bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-2xs">
@@ -113,16 +113,23 @@
                 </div>
             </div>
 
-            <form id="admin-add-user-form" class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 space-y-3">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600"><i class="fa-solid fa-user-plus mr-1"></i> Yeni Personel Tanımla</h4>
+            <!-- PERSONEL EKLEME / DÜZENLEME FORMU -->
+            <form id="admin-user-form" class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 space-y-3">
+                <input type="hidden" id="admin-edit-user-id">
+                <h4 id="admin-form-title" class="text-xs font-bold uppercase tracking-wider text-slate-600"><i class="fa-solid fa-user-plus mr-1"></i> Yeni Personel Tanımla</h4>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <input type="text" id="admin-new-name" placeholder="Ad Soyad" required class="px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white">
                     <select id="admin-new-unit" class="px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white"></select>
                     <input type="text" id="admin-new-pass" placeholder="Şifre" required class="px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white">
                 </div>
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1">
-                    <i class="fa-solid fa-plus"></i> Supabase'e Kaydet
-                </button>
+                <div class="flex gap-2">
+                    <button type="submit" id="admin-form-submit-btn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-plus"></i> Supabase'e Kaydet
+                    </button>
+                    <button type="button" id="admin-form-cancel-btn" onclick="resetAdminUserForm()" class="hidden w-1/3 bg-slate-300 hover:bg-slate-400 text-slate-700 font-medium py-2 rounded-xl text-xs transition">
+                        İptal
+                    </button>
+                </div>
             </form>
 
             <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2"><i class="fa-solid fa-users mr-1"></i> Kayıtlı Personel Listesi</h4>
@@ -369,12 +376,7 @@
             usersList.forEach(user => {
                 const opt = document.createElement('option');
                 opt.value = user.adsoyad;
-                
-                let displayName = user.adsoyad;
-                if (user.adsoyad.includes('Sertaç')) displayName = 'Başhekim';
-                else if (user.adsoyad.includes('Mehmet')) displayName = 'Admin';
-                
-                opt.textContent = displayName;
+                opt.textContent = `${user.adsoyad} (${user.birim})`;
                 loginSelectEl.appendChild(opt);
             });
         }
@@ -470,6 +472,7 @@
         function toggleAdminModal(show) {
             const modal = document.getElementById('admin-modal');
             if (show) { 
+                resetAdminUserForm();
                 renderAdminUserList(); 
                 modal.classList.remove('hidden');
                 updateLiveClock();
@@ -492,26 +495,68 @@
                         <span class="font-bold text-slate-800">${user.adsoyad}</span>
                         <span class="text-slate-500 block">Birim: ${user.birim} | Şifre: ${user.sifre || 'Belirtilmemiş'}</span>
                     </div>
-                    ${!user.adsoyad.includes('Mehmet') && !user.adsoyad.includes('Sertaç') ? `<button onclick="deleteUserFromSupabase('${user.id}')" class="text-rose-600 hover:text-rose-800 p-1"><i class="fa-solid fa-trash-can"></i> Sil</button>` : '<span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">Yönetici</span>'}
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="prepareEditUser('${user.id}')" class="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded-lg transition" title="Düzenle">
+                            <i class="fa-solid fa-pen"></i> Düzenle
+                        </button>
+                        ${!user.adsoyad.includes('Mehmet') && !user.adsoyad.includes('Sertaç') ? `<button onclick="deleteUserFromSupabase('${user.id}')" class="text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2 py-1 rounded-lg transition" title="Sil"><i class="fa-solid fa-trash-can"></i> Sil</button>` : ''}
+                    </div>
                 `;
                 listEl.appendChild(item);
             });
         }
 
-        document.getElementById('admin-add-user-form').addEventListener('submit', async function(e) {
+        // Personel Düzenleme İçin Formu Doldurma
+        window.prepareEditUser = function(userId) {
+            const user = usersList.find(u => u.id == userId);
+            if (!user) return;
+
+            document.getElementById('admin-edit-user-id').value = user.id;
+            document.getElementById('admin-new-name').value = user.adsoyad;
+            document.getElementById('admin-new-unit').value = user.birim;
+            document.getElementById('admin-new-pass').value = user.sifre;
+
+            document.getElementById('admin-form-title').innerHTML = `<i class="fa-solid fa-user-pen mr-1"></i> Personel Bilgilerini Düzenle (${user.adsoyad})`;
+            const submitBtn = document.getElementById('admin-form-submit-btn');
+            submitBtn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Değişiklikleri Kaydet`;
+            submitBtn.className = "w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1";
+            document.getElementById('admin-form-cancel-btn').classList.remove('hidden');
+        };
+
+        window.resetAdminUserForm = function() {
+            document.getElementById('admin-edit-user-id').value = '';
+            document.getElementById('admin-new-name').value = '';
+            document.getElementById('admin-new-pass').value = '';
+            document.getElementById('admin-form-title').innerHTML = `<i class="fa-solid fa-user-plus mr-1"></i> Yeni Personel Tanımla`;
+            const submitBtn = document.getElementById('admin-form-submit-btn');
+            submitBtn.innerHTML = `<i class="fa-solid fa-plus"></i> Supabase'e Kaydet`;
+            submitBtn.className = "w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1";
+            document.getElementById('admin-form-cancel-btn').classList.add('hidden');
+        };
+
+        // Personel Ekleme veya Güncelleme İşlemi
+        document.getElementById('admin-user-form').addEventListener('submit', async function(e) {
             e.preventDefault();
+            const editId = document.getElementById('admin-edit-user-id').value;
             const adsoyad = document.getElementById('admin-new-name').value.trim();
             const birim = document.getElementById('admin-new-unit').value;
             const sifre = document.getElementById('admin-new-pass').value.trim().toLowerCase();
 
             if (!adsoyad || !sifre) return;
 
-            const { error } = await _supabase.from('kullanicilar').insert([{ adsoyad, birim, rol: 'birim_kullanicisi', sifre }]);
-            if (error) { alert("Kullanıcı eklenirken hata: " + error.message); return; }
+            if (editId) {
+                // Güncelleme
+                const { error } = await _supabase.from('kullanicilar').update({ adsoyad, birim, sifre }).eq('id', editId);
+                if (error) { alert("Güncelleme hatası: " + error.message); return; }
+                alert("Personel bilgileri başarıyla güncellendi!");
+            } else {
+                // Yeni Ekleme
+                const { error } = await _supabase.from('kullanicilar').insert([{ adsoyad, birim, rol: 'birim_kullanicisi', sifre }]);
+                if (error) { alert("Kullanıcı eklenirken hata: " + error.message); return; }
+                alert(`${adsoyad} başarıyla eklendi!`);
+            }
 
-            document.getElementById('admin-new-name').value = '';
-            document.getElementById('admin-new-pass').value = '';
-            alert(`${adsoyad} başarıyla eklendi!`);
+            resetAdminUserForm();
             await loadUsersFromSupabase();
             renderAdminUserList();
         });
