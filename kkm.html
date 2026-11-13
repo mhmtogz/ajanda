@@ -17,7 +17,7 @@
 </head>
 <body id="page-body" class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between transition-colors duration-300">
 
-    <!-- GİRİŞ EKRANI (Yalnızca SKKM Sor., SKKM, Başhekim ve Admin Gösterilir) -->
+    <!-- GİRİŞ EKRANI -->
     <div id="login-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 sm:p-8 border border-slate-200">
             <div class="text-center mb-6">
@@ -43,8 +43,7 @@
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-xl transition duration-200 text-sm shadow-sm flex items-center justify-center gap-2">
                     <i class="fa-solid fa-right-to-bracket"></i> Sisteme Giriş Yap
                 </button>
-             <p class="text-xs text-slate-500 mt-1">Agonya V1.1</p>
-                
+                <p class="text-xs text-slate-500 mt-1 text-center">Agonya V1.1</p>
             </form>
         </div>
     </div>
@@ -109,7 +108,6 @@
                         <span id="current-user-badge" class="text-xs font-semibold text-white block">Aktif Kullanıcı</span>
                     </div>
                     <div class="flex items-center gap-2 ml-2 border-l border-white/20 pl-3">
-                        <!-- Yalnızca Başhekim ve Admin (Mehmet) için Ana Sayfaya Dön Butonu -->
                         <a href="index.html" id="home-nav-btn" class="hidden bg-indigo-700 hover:bg-indigo-800 text-white text-xs px-2.5 py-1.5 rounded-lg transition shadow-xs" title="Ana Sayfaya Dön">
                             <i class="fa-solid fa-house"></i> Ana Sayfa
                         </a>
@@ -136,12 +134,11 @@
                     </div>
                     <button onclick="changeWeek(1)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition">Sonraki Hafta <i class="fa-solid fa-chevron-right ml-1"></i></button>
                     <button onclick="fetchEvents()" class="p-2 text-slate-500 hover:text-blue-600 rounded-xl border border-slate-200 bg-white" title="Yenile"><i class="fa-solid fa-rotate"></i></button>
-                    <!-- Haftalık PDF İndir Butonu -->
                     <button onclick="generateCurrentWeekPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs" title="Bu Haftanın PDF Çıktısını Al"><i class="fa-solid fa-file-arrow-down"></i> PDF İndir</button>
                 </div>
             </div>
 
-            <!-- Masa Takvimi Matrisi (Pazartesi - Cuma, 5 Gün) -->
+            <!-- Masa Takvimi Matrisi -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-grow overflow-hidden flex flex-col">
                 <div class="overflow-x-auto overflow-y-auto max-h-[700px] custom-scrollbar flex-grow">
                     <table class="w-full border-collapse text-left min-w-[900px]">
@@ -189,7 +186,6 @@
             const { data, error } = await _supabase.from('kullanicilar').select('*');
             if (error) { console.error("Kullanıcılar yüklenemedi:", error); return; }
             
-            // Sadece SKKM Sor., SKKM, Başhekim veya Mehmet (Admin) olanları filtrele
             const allUsers = data || [];
             usersList = allUsers.filter(u => 
                 u.rol === 'SKKM Sor.' || 
@@ -208,12 +204,14 @@
             usersList.forEach(user => {
                 const opt = document.createElement('option');
                 opt.value = user.adsoyad;
-                let roleLabel = user.rol;
-                if (user.rol === 'SKKM Sor.') roleLabel = 'SKKM Sorumlusu';
-                else if (user.rol === 'SKKM') roleLabel = 'SKKM';
-                else if (user.adsoyad === 'Mehmet' || user.rol === 'bashekim') roleLabel = 'Başhekim / Admin';
                 
-                opt.textContent = `${user.adsoyad} (${roleLabel})`;
+                // Parantez olmadan doğrudan temiz rol adı gösterimi
+                let cleanRole = user.rol;
+                if (user.adsoyad === 'Mehmet' || user.rol === 'bashekim') {
+                    cleanRole = 'Başhekim / Admin';
+                }
+                
+                opt.textContent = `${user.adsoyad} - ${cleanRole}`;
                 loginSelectEl.appendChild(opt);
             });
         }
@@ -244,6 +242,7 @@
             let roleText = currentUser.rol;
             if (currentUser.rol === 'SKKM Sor.') roleText = 'SKKM Sorumlusu';
             else if (currentUser.rol === 'SKKM') roleText = 'SKKM';
+            else if (currentUser.adsoyad === 'Mehmet' || currentUser.rol === 'bashekim') roleText = 'Başhekim / Admin';
             
             document.getElementById('current-user-badge').textContent = `Aktif: ${currentUser.adsoyad} (${roleText})`;
             
