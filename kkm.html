@@ -244,15 +244,10 @@
                 </div>
             </div>
 
-            <!-- Masa Takvimi Matrisi -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-grow overflow-hidden flex flex-col">
-                <div class="overflow-x-auto overflow-y-auto max-h-[700px] custom-scrollbar flex-grow">
-                    <table class="w-full border-collapse text-left min-w-[900px]">
-                        <thead>
-                            <tr id="calendar-header" class="bg-slate-50 border-b border-slate-200 sticky top-0 z-20"></tr>
-                        </thead>
-                        <tbody id="calendar-body" class="divide-y divide-slate-100"></tbody>
-                    </table>
+            <!-- 7 Günlük Kart Görünümü (Saat Matrisi Kaldırıldı) -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-grow p-4 overflow-x-auto custom-scrollbar">
+                <div id="weekly-columns-container" class="grid grid-cols-1 md:grid-cols-7 gap-4 min-w-[1200px]">
+                    <!-- Günlük Kolonlar JavaScript ile Dinamik Dolacak -->
                 </div>
             </div>
         </main>
@@ -397,7 +392,6 @@
 
             document.getElementById('current-user-badge').textContent = `Aktif: ${currentUser.birim} (${currentUser.rol})`;
 
-            // Admin butonunu sadece admin / başhekim rolüne göster
             if (isFullAdmin()) {
                 document.getElementById('admin-btn').classList.remove('hidden');
             } else {
@@ -436,13 +430,13 @@
             if (currentTab === 'genel') {
                 headerEl.classList.add('bg-rose-600');
                 genelBtn.className = "py-3 px-4 font-semibold text-sm border-b-2 border-rose-600 text-rose-600 flex items-center gap-2 transition whitespace-nowrap";
-                listTitle.textContent = "SKKM Koordinasyon Haftalık Ajandası";
+                listTitle.textContent = "SKKM Koordinasyon Haftalık Ajandası (7 Gün)";
                 addBtn.style.display = canManageGenel() ? 'flex' : 'none';
                 addBtn.className = "bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs";
             } else {
                 headerEl.classList.add('bg-emerald-600');
                 kisiselBtn.className = "py-3 px-4 font-semibold text-sm border-b-2 border-emerald-600 text-emerald-600 flex items-center gap-2 transition whitespace-nowrap";
-                listTitle.textContent = "SKKM Sorumlu Ajandası (Özel Planlamalar)";
+                listTitle.textContent = "SKKM Sorumlu Ajandası (7 Gün Özel Planlamalar)";
                 addBtn.style.display = 'flex';
                 addBtn.className = "bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs";
             }
@@ -663,13 +657,14 @@
             fetchEvents();
         }
 
-        function getWorkWeekDates(dateStr) {
+        // 7 Günlük Hafta (Pazartesi - Pazar) Hesaplama
+        function get7DaysOfWeek(dateStr) {
             const curr = new Date(dateStr);
             const day = curr.getDay();
-            const diff = curr.getDate() - day + (day === 0 ? -6 : 1);
+            const diff = curr.getDate() - day + (day === 0 ? -6 : 1); // Pazartesi başlangıç
             const monday = new Date(curr.setDate(diff));
             const dates = [];
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < 7; i++) {
                 const next = new Date(monday);
                 next.setDate(monday.getDate() + i);
                 dates.push(next.toISOString().split('T')[0]);
@@ -763,14 +758,14 @@
 
         async function fetchEvents() {
             if (!currentUser) return;
-            const weekDays = getWorkWeekDates(document.getElementById('filter-date').value);
+            const weekDays = get7DaysOfWeek(document.getElementById('filter-date').value);
             
-            let query = _supabase.from(NOTES_TABLE).select('*').gte('tarih', weekDays[0]).lte('tarih', weekDays[4]).eq('tur', currentTab);
+            let query = _supabase.from(NOTES_TABLE).select('*').gte('tarih', weekDays[0]).lte('tarih', weekDays[6]).eq('tur', currentTab);
 
             if (currentTab === 'kisisel') {
                 if (!isFullAdmin() && !isSKKMSor()) {
                     cachedEvents = [];
-                    renderCalendar(weekDays);
+                    render7DayColumns(weekDays);
                     return;
                 }
             }
@@ -778,107 +773,94 @@
             const { data, error } = await query.order('saat', { ascending: true });
             if (error) { console.error("Notlar çekilemedi:", error); return; }
             cachedEvents = data || [];
-            renderCalendar(weekDays);
+            render7DayColumns(weekDays);
         }
 
-        function renderCalendar(weekDays) {
-            const headerEl = document.getElementById('calendar-header');
-            const bodyEl = document.getElementById('calendar-body');
-            const dayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
+        // 7 Günlük Kolon Görünümünü ve Saat Sıralı Kartları Oluşturma
+        function render7DayColumns(weekDays) {
+            const container = document.getElementById('weekly-columns-container');
+            container.innerHTML = '';
+            const dayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
 
-            let activeThemeColorClass = currentTab === 'genel' ? 'text-rose-700 bg-rose-50' : 'text-emerald-700 bg-emerald-50';
-            let activeThemeBadgeClass = currentTab === 'genel' ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white';
-            let hoverThemeClass = currentTab === 'genel' ? 'hover:bg-rose-50/40' : 'hover:bg-emerald-50/40';
-
-            let headerHtml = `<th class="p-3 text-xs font-bold text-slate-500 uppercase border-r border-slate-200 bg-slate-100 text-center w-24">Saat</th>`;
             weekDays.forEach((dStr, idx) => {
                 const isToday = (dStr === todayStr);
                 const [y, m, d] = dStr.split('-');
-                headerHtml += `
-                    <th class="p-3 text-center border-r border-slate-200 ${isToday ? activeThemeColorClass : 'text-slate-700'} min-w-[180px]">
-                        <span class="block text-xs font-bold">${dayNames[idx]}</span>
-                        <span class="text-[11px] font-medium ${isToday ? activeThemeBadgeClass + ' px-2 py-0.5 rounded-full inline-block mt-0.5' : 'text-slate-500'}">${d}.${m}.${y}</span>
-                    </th>
+                
+                const colDiv = document.createElement('div');
+                colDiv.className = `bg-slate-50 border ${isToday ? 'border-rose-400 ring-1 ring-rose-400' : 'border-slate-200'} rounded-2xl p-3 flex flex-col min-h-[500px]`;
+
+                // Gün Başlığı
+                colDiv.innerHTML = `
+                    <div class="text-center pb-3 mb-3 border-b border-slate-200 ${isToday ? 'bg-rose-50 text-rose-700 rounded-xl p-2' : 'text-slate-700'}">
+                        <span class="block text-xs font-bold uppercase tracking-wider">${dayNames[idx]}</span>
+                        <span class="text-xs font-semibold ${isToday ? 'bg-rose-600 text-white px-2 py-0.5 rounded-full inline-block mt-1' : 'text-slate-500'}">${d}.${m}.${y}</span>
+                    </div>
+                    <div class="space-y-2 flex-grow overflow-y-auto custom-scrollbar pr-1 day-cards-container-${dStr}"></div>
                 `;
-            });
-            headerEl.innerHTML = headerHtml;
+                container.appendChild(colDiv);
 
-            const timeSlots = [];
-            for (let h = 8; h <= 17; h++) {
-                const hr = h < 10 ? '0' + h : '' + h;
-                timeSlots.push(`${hr}:00`, `${hr}:15`, `${hr}:30`, `${hr}:45`);
-            }
-            timeSlots.push('17:30');
+                // O güne ait kayıtları filtrele ve saat sırasına göre sırala
+                const dayEvents = cachedEvents
+                    .filter(ev => ev.tarih === dStr)
+                    .sort((a, b) => a.saat.localeCompare(b.saat));
 
-            bodyEl.innerHTML = '';
-            timeSlots.forEach(time => {
-                const row = document.createElement('tr');
-                row.className = "hover:bg-slate-50/80 transition";
-                let rowHtml = `<td class="p-2 text-center text-xs font-bold text-slate-500 border-r border-slate-200 bg-slate-50">${time}</td>`;
-                weekDays.forEach(dStr => {
-                    rowHtml += `
-                        <td class="p-1.5 border-r border-slate-200 align-top h-16 ${hoverThemeClass} transition relative">
-                            <div class="space-y-1 z-10 relative slot-container-${dStr}-${time.replace(':', '')}"></div>
-                        </td>
-                    `;
-                });
-                row.innerHTML = rowHtml;
-                bodyEl.appendChild(row);
-            });
+                const cardsContainer = colDiv.querySelector(`.day-cards-container-${dStr}`);
 
-            cachedEvents.forEach(ev => {
-                const timeSafe = ev.saat.replace(':', '');
-                const container = document.querySelector(`.slot-container-${ev.tarih}-${timeSafe}`);
-                if (container) {
-                    const card = document.createElement('div');
-                    let bg = 'bg-sky-50 text-sky-900 border-sky-200';
-                    let statusBadge = `<span class="text-[9px] bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded-full font-bold">${escapeHtml(ev.durum || 'Planlandı')}</span>`;
+                if (dayEvents.length === 0) {
+                    cardsContainer.innerHTML = `<div class="text-center text-slate-400 text-[11px] py-8 italic">Plan bulunmuyor</div>`;
+                } else {
+                    dayEvents.forEach(ev => {
+                        const card = document.createElement('div');
+                        let bg = 'bg-sky-50 text-sky-900 border-sky-200';
+                        let statusBadge = `<span class="text-[9px] bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded-full font-bold">${escapeHtml(ev.durum || 'Planlandı')}</span>`;
 
-                    if (ev.durum === 'Gerçekleşti') {
-                        bg = 'bg-emerald-50 text-emerald-900 border-emerald-200';
-                        statusBadge = `<span class="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full font-bold">Gerçekleşti</span>`;
-                    } else if (ev.durum === 'İptal') {
-                        bg = 'bg-rose-50 text-rose-900 border-rose-200';
-                        statusBadge = `<span class="text-[9px] bg-rose-100 text-rose-800 px-1.5 py-0.5 rounded-full font-bold">İptal</span>`;
-                    }
-
-                    card.className = `p-1.5 ${bg} border rounded-lg text-xs space-y-1 relative group/card shadow-2xs`;
-
-                    let canEdit = false;
-                    let canDelete = false;
-
-                    if (isFullAdmin()) {
-                        canEdit = true;
-                        canDelete = true;
-                    } else if (isSKKMSor()) {
-                        canEdit = true;
-                        canDelete = true;
-                    } else if (currentUser.birim === 'SKKM' && currentTab === 'genel') {
-                        canEdit = true;
-                        canDelete = false;
-                    }
-
-                    let actions = '';
-                    if (canEdit || canDelete) {
-                        actions = `<div class="absolute top-1 right-1 flex items-center gap-1 opacity-0 group-hover/card:opacity-100 transition bg-white/90 p-0.5 rounded shadow-xs">`;
-                        if (canEdit) {
-                            actions += `<button onclick="event.stopPropagation(); editEv(${ev.id})" class="text-blue-500 hover:text-blue-700 p-0.5" title="${currentUser.birim === 'SKKM' ? 'Durum Güncelle' : 'Düzenle'}"><i class="fa-solid fa-pen text-[10px]"></i></button>`;
+                        if (ev.durum === 'Gerçekleşti') {
+                            bg = 'bg-emerald-50 text-emerald-900 border-emerald-200';
+                            statusBadge = `<span class="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full font-bold">Gerçekleşti</span>`;
+                        } else if (ev.durum === 'İptal') {
+                            bg = 'bg-rose-50 text-rose-900 border-rose-200';
+                            statusBadge = `<span class="text-[9px] bg-rose-100 text-rose-800 px-1.5 py-0.5 rounded-full font-bold">İptal</span>`;
                         }
-                        if (canDelete) {
-                            actions += `<button onclick="event.stopPropagation(); deleteEv(${ev.id})" class="text-rose-500 hover:text-rose-700 p-0.5" title="Sil"><i class="fa-solid fa-trash-can text-[10px]"></i></button>`;
-                        }
-                        actions += `</div>`;
-                    }
 
-                    card.innerHTML = `
-                        <div class="flex justify-between items-center pr-8">
-                            <span class="font-semibold text-[11px]"><i class="fa-regular fa-user mr-0.5 text-[9px]"></i>${escapeHtml(ev.ekleyen)}</span>
-                            ${statusBadge}
-                        </div>
-                        <p class="text-[11px] leading-tight whitespace-pre-wrap">${escapeHtml(ev.aciklama)}</p>
-                        ${actions}
-                    `;
-                    container.appendChild(card);
+                        card.className = `p-2.5 ${bg} border rounded-xl text-xs space-y-1.5 relative group/card shadow-2xs transition hover:shadow-md`;
+
+                        let canEdit = false;
+                        let canDelete = false;
+
+                        if (isFullAdmin()) {
+                            canEdit = true;
+                            canDelete = true;
+                        } else if (isSKKMSor()) {
+                            canEdit = true;
+                            canDelete = true;
+                        } else if (currentUser.birim === 'SKKM' && currentTab === 'genel') {
+                            canEdit = true;
+                            canDelete = false;
+                        }
+
+                        let actions = '';
+                        if (canEdit || canDelete) {
+                            actions = `<div class="absolute top-1.5 right-1.5 flex items-center gap-1 opacity-0 group-hover/card:opacity-100 transition bg-white/90 p-1 rounded-lg shadow-xs">`;
+                            if (canEdit) {
+                                actions += `<button onclick="event.stopPropagation(); editEv(${ev.id})" class="text-blue-500 hover:text-blue-700 p-0.5" title="${currentUser.birim === 'SKKM' ? 'Durum Güncelle' : 'Düzenle'}"><i class="fa-solid fa-pen text-[11px]"></i></button>`;
+                            }
+                            if (canDelete) {
+                                actions += `<button onclick="event.stopPropagation(); deleteEv(${ev.id})" class="text-rose-500 hover:text-rose-700 p-0.5" title="Sil"><i class="fa-solid fa-trash-can text-[11px]"></i></button>`;
+                            }
+                            actions += `</div>`;
+                        }
+
+                        card.innerHTML = `
+                            <div class="flex justify-between items-center pr-6">
+                                <span class="font-bold text-[11px] text-indigo-700 bg-white/80 px-1.5 py-0.5 rounded shadow-2xs"><i class="fa-regular fa-clock mr-1 text-[10px]"></i>${ev.saat}</span>
+                                ${statusBadge}
+                            </div>
+                            <div class="text-[11px] font-semibold text-slate-700"><i class="fa-regular fa-user mr-1 text-[9px]"></i>${escapeHtml(ev.ekleyen)}</div>
+                            <p class="text-[11px] leading-relaxed whitespace-pre-wrap">${escapeHtml(ev.aciklama)}</p>
+                            ${actions}
+                        `;
+                        cardsContainer.appendChild(card);
+                    });
                 }
             });
         }
@@ -902,27 +884,25 @@
             }
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('l', 'mm', 'a4');
-            const dayNamesTR = ['Pazartesi', 'Sali', 'Carsamba', 'Persembe', 'Cuma'];
-            const weekDays = getWorkWeekDates(document.getElementById('filter-date').value);
+            const weekDays = get7DaysOfWeek(document.getElementById('filter-date').value);
 
             doc.setFont("helvetica", "bold");
             doc.setFontSize(13);
             doc.setTextColor(30, 41, 59);
-            doc.text(fixTurkishChars("CANAKKALE IL AMBULANS SERVISI KKM OPERASYONEL RAPORU"), 14, 12);
+            doc.text(fixTurkishChars("CANAKKALE IL AMBULANS SERVISI KKM OPERASYONEL RAPORU (7 GUN)"), 14, 12);
 
             let startY = 25;
             cachedEvents.forEach(ev => {
                 if (startY > 185) return;
                 const [y, m, d] = ev.tarih.split('-');
-                const dayName = dayNamesTR[weekDays.indexOf(ev.tarih)] || '';
                 doc.setFillColor(248, 250, 252);
                 doc.roundedRect(14, startY, 269, 11, 1, 1, 'FD');
                 doc.setFontSize(9);
-                doc.text(fixTurkishChars(`${dayName}, ${d}.${m}.${y} - Saat: ${ev.saat}`), 18, startY + 7);
+                doc.text(fixTurkishChars(`Tarih: ${d}.${m}.${y} - Saat: ${ev.saat}`), 18, startY + 7);
                 doc.text(fixTurkishChars(`${ev.ekleyen}: ${ev.aciklama} (${ev.durum || 'Planlandi'})`), 85, startY + 7);
                 startY += 14;
             });
-            doc.save(`Canakkale_112_KKM_Ajanda_${weekDays[0]}.pdf`);
+            doc.save(`Canakkale_112_KKM_7Gun_Rapor_${weekDays[0]}.pdf`);
         }
 
         document.getElementById('filter-date').addEventListener('change', fetchEvents);
