@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çanakkale 112 Kurumsal Ajanda V5.4</title>
+    <title>Çanakkale 112 Kurumsal Ajanda V5.5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -12,13 +12,14 @@
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
-        /* PDF / Yazdırma Modu Stilleri */
+        /* PDF / Yazdırma Modu Stilleri: Ajanda ana ekrandaki yapısıyla birebir basılır */
         @media print {
-            body { background: white !important; color: black !important; }
+            body { background: white !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             header, nav, .no-print, button { display: none !important; }
-            .print-page-container { page-break-after: always; break-after: page; display: block !important; width: 100%; margin-top: 20px; }
-            table { width: 100% !important; border-collapse: collapse !important; font-size: 11px !important; }
-            th, td { border: 1px solid #cbd5e1 !important; padding: 6px !important; color: black !important; }
+            .print-page-container { page-break-after: always; break-after: page; display: block !important; width: 100%; margin-top: 10px; }
+            table { width: 100% !important; border-collapse: collapse !important; font-size: 10px !important; table-layout: fixed !important; }
+            th, td { border: 1px solid #94a3b8 !important; padding: 6px !important; color: black !important; vertical-align: top !important; word-wrap: break-word !important; }
+            th:first-child, td:first-child { width: 65px !important; text-align: center !important; }
         }
     </style>
 </head>
@@ -259,7 +260,7 @@
         </main>
 
         <footer class="text-center py-4 text-xs text-slate-400 border-t border-slate-200 mt-6 bg-white">
-            Çanakkale İl Ambulans Servisi Başhekimliği &bull; Kurumsal Masa Ajandası V5.4
+            Çanakkale İl Ambulans Servisi Başhekimliği &bull; Kurumsal Masa Ajandası V5.5
         </footer>
     </div>
 
@@ -757,12 +758,11 @@
                     if (container) {
                         const card = document.createElement('div');
                         
-                        // BURASI GÜNCELLENDİ: Duruma göre kutunun arka plan rengi değişir
-                        let cardBgClass = 'bg-sky-50 text-sky-900 border-sky-200'; // Planlandı (Varsayılan/Mavi)
+                        let cardBgClass = 'bg-sky-50 text-sky-900 border-sky-200';
                         if (ev.durum === 'Gerçekleşti') {
-                            cardBgClass = 'bg-emerald-50 text-emerald-900 border-emerald-200'; // Gerçekleşti (Yeşil)
+                            cardBgClass = 'bg-emerald-50 text-emerald-900 border-emerald-200';
                         } else if (ev.durum === 'İptal') {
-                            cardBgClass = 'bg-rose-50 text-rose-900 border-rose-200'; // İptal (Kırmızı/Gül)
+                            cardBgClass = 'bg-rose-50 text-rose-900 border-rose-200';
                         }
 
                         card.className = `p-1.5 ${cardBgClass} border rounded-lg text-xs space-y-1 relative group/card shadow-2xs`;
@@ -872,21 +872,21 @@
                 pageDiv.className = 'print-page-container';
 
                 let html = `
-                    <div style="margin-bottom: 15px; border-bottom: 2px solid #333; padding-bottom: 10px;">
-                        <h2 style="font-size: 16px; font-weight: bold; margin: 0;">ÇANAKKALE İL AMBULANS SERVİSİ BAŞHEKİMLİĞİ</h2>
-                        <h3 style="font-size: 14px; margin: 3px 0; color: #4f46e5;">${titleText} (${monthTitleStr} - ${weekIndex + 1}. Hafta)</h3>
-                        <p style="font-size: 10px; margin: 0; color: #666;">Rapor Tarihi: ${weekDates[0].split('-').reverse().join('.')} - ${weekDates[4].split('-').reverse().join('.')}</p>
+                    <div style="margin-bottom: 12px; border-bottom: 2px solid #333; padding-bottom: 8px;">
+                        <h2 style="font-size: 14px; font-weight: bold; margin: 0;">ÇANAKKALE İL AMBULANS SERVİSİ BAŞHEKİMLİĞİ</h2>
+                        <h3 style="font-size: 12px; margin: 2px 0; color: #4f46e5;">${titleText} (${monthTitleStr} - ${weekIndex + 1}. Hafta)</h3>
+                        <p style="font-size: 9px; margin: 0; color: #666;">Rapor Tarihi: ${weekDates[0].split('-').reverse().join('.')} - ${weekDates[4].split('-').reverse().join('.')}</p>
                     </div>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 9px; table-layout: fixed;">
                         <thead>
                             <tr style="background-color: #f1f5f9;">
-                                <th style="border: 1px solid #cbd5e1; padding: 6px; width: 60px; text-align: center;">Saat</th>
+                                <th style="border: 1px solid #94a3b8; padding: 4px; width: 60px; text-align: center;">Saat</th>
                 `;
 
                 const dayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
                 weekDates.forEach((dStr, dIdx) => {
                     const [y, m, d] = dStr.split('-');
-                    html += `<th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center;">${dayNames[dIdx]}<br><span style="font-weight:normal; font-size:9px;">${d}.${m}.${y}</span></th>`;
+                    html += `<th style="border: 1px solid #94a3b8; padding: 4px; text-align: center;">${dayNames[dIdx]}<br><span style="font-weight:normal; font-size:8px;">${d}.${m}.${y}</span></th>`;
                 });
                 html += `</tr></thead><tbody>`;
 
@@ -898,16 +898,29 @@
                 timeSlots.push('17:30');
 
                 timeSlots.forEach(time => {
-                    html += `<tr><td style="border: 1px solid #cbd5e1; padding: 4px; text-align: center; font-weight: bold; background-color: #f8fafc;">${time}</td>`;
+                    html += `<tr><td style="border: 1px solid #94a3b8; padding: 3px; text-align: center; font-weight: bold; background-color: #f8fafc;">${time}</td>`;
                     
                     weekDates.forEach(dateStr => {
                         const matchingEvents = (monthEvents || []).filter(ev => ev.tarih === dateStr && ev.saat === time);
                         let cellContent = '';
                         matchingEvents.forEach(ev => {
                             let unitTag = (targetType === 'tum_birimler' && ev.hedef_birim) ? `<b>[${ev.hedef_birim}]</b> ` : '';
-                            cellContent += `<div style="margin-bottom: 3px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 2px;">${unitTag}<b>${ev.ekleyen_kisi}:</b> ${ev.aciklama} (${ev.durum || 'Planlandı'})</div>`;
+                            
+                            // Yazdırma çıktısında da renklendirme desteği
+                            let bgStyle = 'background-color: #f0f9ff; color: #0369a1; border-color: #bae6fd;';
+                            if (ev.durum === 'Gerçekleşti') {
+                                bgStyle = 'background-color: #ecfdf5; color: #047857; border-color: #a7f3d0;';
+                            } else if (ev.durum === 'İptal') {
+                                bgStyle = 'background-color: #fff1f2; color: #be123c; border-color: #fecdd3;';
+                            }
+
+                            cellContent += `
+                                <div style="margin-bottom: 2px; padding: 3px; border: 1px solid; border-radius: 4px; ${bgStyle}">
+                                    ${unitTag}<b>${ev.ekleyen_kisi}:</b> ${ev.aciklama}
+                                </div>
+                            `;
                         });
-                        html += `<td style="border: 1px solid #cbd5e1; padding: 4px; vertical-align: top; height: 35px;">${cellContent}</td>`;
+                        html += `<td style="border: 1px solid #94a3b8; padding: 3px; vertical-align: top; height: 30px;">${cellContent}</td>`;
                     });
                     html += `</tr>`;
                 });
