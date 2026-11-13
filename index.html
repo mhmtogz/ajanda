@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çanakkale 112 Kurumsal Ajanda V5.8</title>
+    <title>Çanakkale 112 Kurumsal Ajanda V5.9</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -254,7 +254,7 @@
         </main>
 
         <footer class="text-center py-4 text-xs text-slate-400 border-t border-slate-200 mt-6 bg-white">
-            Çanakkale İl Ambulans Servisi Başhekimliği &bull; Kurumsal Masa Ajandası V5.8
+            Çanakkale İl Ambulans Servisi Başhekimliği &bull; Kurumsal Masa Ajandası V5.9
         </footer>
     </div>
 
@@ -286,6 +286,18 @@
         const todayStr = new Date().toISOString().split('T')[0];
         document.getElementById('filter-date').value = todayStr;
         document.getElementById('pdf-report-month').value = todayStr.substring(0, 7);
+
+        // Türkçe karakterleri PDF uyumlu hale getiren yardımcı fonksiyon
+        function fixTurkishChars(str) {
+            if (!str) return '';
+            return str
+                .replace(/Ç/g, 'C').replace(/ç/g, 'c')
+                .replace(/Ğ/g, 'G').replace(/ğ/g, 'g')
+                .replace(/İ/g, 'I').replace(/ı/g, 'i')
+                .replace(/Ö/g, 'O').replace(/ö/g, 'o')
+                .replace(/Ş/g, 'S').replace(/ş/g, 's')
+                .replace(/Ü/g, 'U').replace(/ü/g, 'u');
+        }
 
         function updateLiveClock() {
             const clockTextEl = document.getElementById('clock-text');
@@ -828,7 +840,7 @@
             }
         }
 
-        // YATAY (LANDSCAPE) VE HER HAFTA 1 SAYFA OLACAK ŞEKİLDE PDF RAPORU
+        // YATAY (LANDSCAPE) VE HER HAFTA 1 SAYFA OLACAK ŞEKİLDE PDF RAPORU (TÜRKÇE KARAKTER UYUMLU)
         async function generateMonthlyLandscapePDF() {
             const monthInput = document.getElementById('pdf-report-month').value;
             const targetType = document.getElementById('pdf-report-target').value;
@@ -838,7 +850,6 @@
             const firstDayOfMonth = new Date(year, month - 1, 1);
             const lastDayOfMonth = new Date(year, month, 0);
 
-            // Ayın içindeki haftaların pazartesi tarihlerini bul
             let curr = new Date(firstDayOfMonth);
             const day = curr.getDay();
             const diffToMonday = curr.getDate() - day + (day === 0 ? -6 : 1);
@@ -866,15 +877,13 @@
             const { data: monthEvents, error } = await query;
             if (error) { alert("Veriler çekilemedi: " + error.message); return; }
 
-            // jsPDF Yatay (Landscape) A4 Başlat
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4'); // 'l' = Landscape (Yatay)
+            const doc = new jsPDF('l', 'mm', 'a4');
 
-            const monthNamesTR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
-            const titleText = targetType === 'bashekim' ? 'Başhekimlik Genel Masa Ajandası' : 'Tüm Birimler Ortak Ajandası';
+            const monthNamesTR = ["Ocak", "Subat", "Mart", "Nisan", "Mayis", "Haziran", "Temmuz", "Agustos", "Eylul", "Ekim", "Kasim", "Aralik"];
+            const titleText = targetType === 'bashekim' ? 'Bashekimlik Genel Masa Ajandasi' : 'Tum Birimler Ortak Ajandasi';
             const monthTitleStr = `${monthNamesTR[parseInt(month)-1]} ${year}`;
 
-            // Birimler bazlı raporlama istendiyse birimleri döngüye sok, aksi takdirde genel oluştur
             const birimlerToProcess = (targetType === 'tum_birimler') ? birimlerListesi : ['Genel'];
 
             birimlerToProcess.forEach((birimName, bIdx) => {
@@ -887,54 +896,48 @@
                         weekDates.push(d.toISOString().split('T')[0]);
                     }
 
-                    // Bu hafta ve bu birim için kayıt var mı kontrol et (boş sayfaları atlamak için)
                     const weekEvents = (monthEvents || []).filter(ev => {
                         const matchDate = weekDates.includes(ev.tarih);
                         const matchBirim = (targetType === 'tum_birimler') ? (ev.hedef_birim === birimName) : true;
                         return matchDate && matchBirim;
                     });
 
-                    // Eğer veri yoksa ve tek birim değilse boş sayfa yaratma
                     if (weekEvents.length === 0 && targetType === 'tum_birimler') return;
 
-                    // Her yeni hafta/birim için yeni sayfa aç (İlk sayfa hariç)
                     if (doc.internal.getNumberOfPages() > 1 || bIdx > 0 || weekIndex > 0) {
                         doc.addPage();
                     }
 
-                    // Başlık Alanı
                     doc.setFont("helvetica", "bold");
                     doc.setFontSize(13);
                     doc.setTextColor(30, 41, 59);
-                    doc.text("CANAKKALE IL AMBULANS SERVISI BASHEKIMLIGI", 14, 12);
+                    doc.text(fixTurkishChars("CANAKKALE IL AMBULANS SERVISI BASHEKIMLIGI"), 14, 12);
 
                     doc.setFontSize(10);
                     doc.setTextColor(79, 70, 229);
                     let subTitle = `${titleText} (${monthTitleStr} - ${weekIndex + 1}. Hafta)`;
                     if (targetType === 'tum_birimler') subTitle += ` [${birimName}]`;
-                    doc.text(subTitle, 14, 18);
+                    doc.text(fixTurkishChars(subTitle), 14, 18);
 
                     doc.setFontSize(8);
                     doc.setTextColor(100, 100, 100);
-                    doc.text(`Tarih Aralığı: ${weekDates[0].split('-').reverse().join('.')} - ${weekDates[4].split('-').reverse().join('.')}`, 14, 23);
+                    doc.text(fixTurkishChars(`Tarih Araligi: ${weekDates[0].split('-').reverse().join('.')} - ${weekDates[4].split('-').reverse().join('.')}`), 14, 23);
 
-                    // Sadece dolu olan planları alt alta şık bir liste formatında yazdır (1 sayfayı asla aşmaz)
                     let startY = 30;
                     doc.setFontSize(9);
 
                     if (weekEvents.length === 0) {
                         doc.setFont("helvetica", "italic");
                         doc.setTextColor(150, 150, 150);
-                        doc.text("Bu hafta için kayıtlı plan bulunmamaktadır.", 14, startY + 10);
+                        doc.text(fixTurkishChars("Bu hafta için kayıtlı plan bulunmamaktadır."), 14, startY + 10);
                     } else {
-                        // Saate ve tarihe göre sırala
                         weekEvents.sort((a, b) => a.tarih.localeCompare(b.tarih) || a.saat.localeCompare(b.saat));
 
                         weekEvents.forEach(ev => {
-                            if (startY > 185) return; // Sayfa sınırını koru
+                            if (startY > 185) return;
 
                             const [y, m, d] = ev.tarih.split('-');
-                            const dayNameMap = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+                            const dayNameMap = ['Pazar', 'Pazartesi', 'Sali', 'Carsamba', 'Persembe', 'Cuma', 'Cumartesi'];
                             const dayName = dayNameMap[new Date(ev.tarih).getDay()];
 
                             doc.setFillColor(248, 250, 252);
@@ -943,10 +946,10 @@
 
                             doc.setFont("helvetica", "bold");
                             doc.setTextColor(30, 41, 59);
-                            doc.text(`${dayName}, ${d}.${m}.${y} - Saat: ${ev.saat}`, 18, startY + 7);
+                            doc.text(fixTurkishChars(`${dayName}, ${d}.${m}.${y} - Saat: ${ev.saat}`), 18, startY + 7);
 
                             doc.setFont("helvetica", "normal");
-                            doc.text(`${ev.ekleyen_kisi}: ${ev.aciklama} (${ev.durum || 'Planlandı'})`, 85, startY + 7);
+                            doc.text(fixTurkishChars(`${ev.ekleyen_kisi}: ${ev.aciklama} (${ev.durum || 'Planlandi'})`), 85, startY + 7);
 
                             startY += 14;
                         });
@@ -954,7 +957,6 @@
                 });
             });
 
-            // Doğrudan Yatay PDF İndir
             doc.save(`Canakkale_112_Ajanda_Yatay_Rapor_${year}_${month}.pdf`);
             toggleAdminModal(false);
         }
