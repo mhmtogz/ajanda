@@ -277,7 +277,6 @@
         const { createClient } = supabase;
         const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Başhekimlik birimi listeden kaldırıldı
         const birimlerListesi = [
             "Bilgi Sistemleri Birimi",
             "Personel Birimi",
@@ -398,7 +397,6 @@
             }
         }
 
-        // Admin veya Sertaç kontrolü yerine ortak yönetici yetki kontrolü (isManager)
         function checkIsManager() {
             if (!currentUser) return false;
             return currentUser.rol === 'admin' || currentUser.adsoyad.includes('Sertaç') || currentUser.adsoyad.includes('Mehmet');
@@ -797,11 +795,7 @@
 
                 weekDays.forEach(dateStr => {
                     rowHtml += `
-                        <td class="p-1.5 border-r border-slate-200 align-top h-16 cursor-pointer ${hoverThemeClass} transition group relative" 
-                            onclick="toggleEventModal(true, null)" title="Bu saate plan eklemek için tıklayın">
-                            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 flex items-center justify-center pointer-events-none z-20">
-                                <span class="text-[10px] ${activeThemeBadgeClass} px-1.5 py-0.5 rounded shadow-xs"><i class="fa-solid fa-plus"></i> Ekle</span>
-                            </div>
+                        <td class="p-1.5 border-r border-slate-200 align-top h-16 ${hoverThemeClass} transition relative">
                             <div class="space-y-1 z-10 relative slot-container-${dateStr}-${time.replace(':', '')}"></div>
                         </td>
                     `;
