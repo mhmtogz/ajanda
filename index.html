@@ -277,8 +277,8 @@
         const { createClient } = supabase;
         const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        // Başhekimlik birimi listeden kaldırıldı
         const birimlerListesi = [
-            "Başhekimlik",
             "Bilgi Sistemleri Birimi",
             "Personel Birimi",
             "Kalite Birimi",
@@ -398,6 +398,12 @@
             }
         }
 
+        // Admin veya Sertaç kontrolü yerine ortak yönetici yetki kontrolü (isManager)
+        function checkIsManager() {
+            if (!currentUser) return false;
+            return currentUser.rol === 'admin' || currentUser.adsoyad.includes('Sertaç') || currentUser.adsoyad.includes('Mehmet');
+        }
+
         function startAppSession() {
             document.getElementById('login-modal').classList.add('hidden');
             const appContainer = document.getElementById('app-container');
@@ -411,8 +417,7 @@
 
             document.getElementById('current-user-badge').textContent = `Aktif: ${currentUser.adsoyad} (${userRoleTitle})`;
             
-            const isManager = (currentUser.rol === 'admin' || currentUser.adsoyad.includes('Sertaç'));
-            if (isManager) {
+            if (checkIsManager()) {
                 document.getElementById('admin-btn').classList.remove('hidden');
             } else {
                 document.getElementById('admin-btn').classList.add('hidden');
@@ -506,7 +511,6 @@
             });
         }
 
-        // Personel Düzenleme İçin Formu Doldurma
         window.prepareEditUser = function(userId) {
             const user = usersList.find(u => u.id == userId);
             if (!user) return;
@@ -534,7 +538,6 @@
             document.getElementById('admin-form-cancel-btn').classList.add('hidden');
         };
 
-        // Personel Ekleme veya Güncelleme İşlemi
         document.getElementById('admin-user-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const editId = document.getElementById('admin-edit-user-id').value;
@@ -545,12 +548,10 @@
             if (!adsoyad || !sifre) return;
 
             if (editId) {
-                // Güncelleme
                 const { error } = await _supabase.from('kullanicilar').update({ adsoyad, birim, sifre }).eq('id', editId);
                 if (error) { alert("Güncelleme hatası: " + error.message); return; }
                 alert("Personel bilgileri başarıyla güncellendi!");
             } else {
-                // Yeni Ekleme
                 const { error } = await _supabase.from('kullanicilar').insert([{ adsoyad, birim, rol: 'birim_kullanicisi', sifre }]);
                 if (error) { alert("Kullanıcı eklenirken hata: " + error.message); return; }
                 alert(`${adsoyad} başarıyla eklendi!`);
@@ -595,7 +596,7 @@
             headerEl.className = "text-white shadow-md py-4 px-4 transition-colors duration-300";
             loginIconBox.className = "w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner transition-colors duration-300";
 
-            const isSertac = currentUser.adsoyad.includes('Sertaç');
+            const isManager = checkIsManager();
 
             if (currentTab === 'bashekim') {
                 headerEl.classList.add('bg-indigo-600');
@@ -608,7 +609,7 @@
                 loginIconBox.classList.add('bg-amber-100', 'text-amber-600');
                 birimBtn.className = "py-3 px-4 font-semibold text-sm border-b-2 border-amber-600 text-amber-600 flex items-center gap-2 transition whitespace-nowrap";
                 
-                if (isSertac) {
+                if (isManager) {
                     listTitle.textContent = "Tüm Birimler Ortak Ajandası";
                     bashekimUnitFilter.classList.remove('hidden');
                 } else {
@@ -662,13 +663,13 @@
             const formEl = document.getElementById('modal-agenda-form');
 
             if (show) {
-                const isSertac = currentUser.adsoyad.includes('Sertaç');
+                const isManager = checkIsManager();
                 let canWrite = false;
                 if (currentTab === 'bashekim') {
-                    canWrite = isSertac;
+                    canWrite = isManager;
                 } else if (currentTab === 'birim') {
                     canWrite = true;
-                    if (isSertac) { targetContainer.classList.remove('hidden'); }
+                    if (isManager) { targetContainer.classList.remove('hidden'); }
                     else { targetContainer.classList.add('hidden'); }
                 } else if (currentTab === 'kisisel') {
                     canWrite = true;
@@ -684,7 +685,7 @@
                     document.getElementById('modal-event-time').value = eventData.saat;
                     document.getElementById('modal-event-status').value = eventData.durum || 'Planlandı';
                     document.getElementById('modal-event-desc').value = eventData.aciklama;
-                    if (isSertac && currentTab === 'birim') {
+                    if (isManager && currentTab === 'birim') {
                         document.getElementById('modal-target-unit-select').value = eventData.hedef_birim || birimlerListesi[0];
                     }
                 }
@@ -703,10 +704,10 @@
             const aciklama = document.getElementById('modal-event-desc').value.trim();
             if (!aciklama) return;
 
-            const isSertac = currentUser.adsoyad.includes('Sertaç');
+            const isManager = checkIsManager();
             let hedefBirimVal = null;
             if (currentTab === 'birim') {
-                hedefBirimVal = isSertac ? document.getElementById('modal-target-unit-select').value : currentUser.birim;
+                hedefBirimVal = isManager ? document.getElementById('modal-target-unit-select').value : currentUser.birim;
             }
 
             if (eventId) {
@@ -729,12 +730,12 @@
             const startDate = weekDays[0];
             const endDate = weekDays[4];
 
-            const isSertac = currentUser.adsoyad.includes('Sertaç');
+            const isManager = checkIsManager();
 
             let query = _supabase.from('ajanda_notlari').select('*').gte('tarih', startDate).lte('tarih', endDate).eq('tur', currentTab);
 
             if (currentTab === 'birim') {
-                if (isSertac) {
+                if (isManager) {
                     const selectedUnitFilter = document.getElementById('bashekim-unit-filter').value;
                     if (selectedUnitFilter !== 'Tumu') { query = query.eq('hedef_birim', selectedUnitFilter); }
                 } else {
@@ -830,7 +831,7 @@
                         card.className = `p-1.5 ${cardBgClass} border rounded-lg text-xs space-y-1 relative group/card shadow-2xs`;
 
                         let actionButtons = '';
-                        if (ev.ekleyen_kisi === currentUser.adsoyad || isSertac) {
+                        if (ev.ekleyen_kisi === currentUser.adsoyad || isManager) {
                             actionButtons = `
                                 <div class="absolute top-1 right-1 flex items-center gap-1 opacity-0 group-hover/card:opacity-100 transition bg-white/90 p-0.5 rounded shadow-xs">
                                     <button onclick="event.stopPropagation(); editEvent(${ev.id})" class="text-blue-500 hover:text-blue-700 p-0.5" title="Düzenle"><i class="fa-solid fa-pen text-[10px]"></i></button>
@@ -839,7 +840,7 @@
                             `;
                         }
 
-                        let birimBadgeText = (currentTab === 'birim' && isSertac && ev.hedef_birim) 
+                        let birimBadgeText = (currentTab === 'birim' && isManager && ev.hedef_birim) 
                             ? `<span class="text-[9px] bg-white/70 text-slate-800 px-1 py-0.2 rounded font-semibold block mb-0.5">${escapeHtml(ev.hedef_birim)}</span>` 
                             : '';
 
