@@ -24,8 +24,8 @@
                 <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner">
                     <i class="fa-solid fa-headset"></i>
                 </div>
-                <h2 class="text-xl font-bold text-slate-800">SKKM Sorumlu & Doktor Girişi</h2>
-                <p class="text-xs text-slate-500 mt-1">Lütfen adınızı seçin ve şifrenizi girin.</p>
+                <h2 class="text-xl font-bold text-slate-800">SKKM Ajanda </h2>
+                <p class="text-xs text-slate-500 mt-1">Lütfen kullanıcı seçin ve şifrenizi girin.</p>
             </div>
             
             <form id="login-form" class="space-y-4">
@@ -43,6 +43,8 @@
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-xl transition duration-200 text-sm shadow-sm flex items-center justify-center gap-2">
                     <i class="fa-solid fa-right-to-bracket"></i> Sisteme Giriş Yap
                 </button>
+             <p class="text-xs text-slate-500 mt-1">Agonya V1.1</p>
+                
             </form>
         </div>
     </div>
@@ -97,8 +99,8 @@
         <header class="bg-blue-600 text-white shadow-md py-4 px-4">
             <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight"><i class="fa-solid fa-headset mr-2"></i> SKKM Sorumlu ve Doktorları Ajandası</h1>
-                    <p class="text-white/80 text-xs mt-0.5">Çanakkale İl Ambulans Servisi Komuta Kontrol Merkezi</p>
+                    <h1 class="text-2xl font-bold tracking-tight"><i class="fa-solid fa-headset mr-2"></i> SKKM Ajandası</h1>
+                    <p class="text-white/80 text-xs mt-0.5">Çanakkale İl Ambulans Servisi Başhekimliği - SKKM</p>
                 </div>
                 
                 <div class="flex items-center gap-3 bg-black/10 px-4 py-2 rounded-xl border border-white/20 text-sm">
@@ -208,7 +210,7 @@
                 opt.value = user.adsoyad;
                 let roleLabel = user.rol;
                 if (user.rol === 'SKKM Sor.') roleLabel = 'SKKM Sorumlusu';
-                else if (user.rol === 'SKKM') roleLabel = 'SKKM Doktoru';
+                else if (user.rol === 'SKKM') roleLabel = 'SKKM';
                 else if (user.adsoyad === 'Mehmet' || user.rol === 'bashekim') roleLabel = 'Başhekim / Admin';
                 
                 opt.textContent = `${user.adsoyad} (${roleLabel})`;
@@ -241,7 +243,7 @@
 
             let roleText = currentUser.rol;
             if (currentUser.rol === 'SKKM Sor.') roleText = 'SKKM Sorumlusu';
-            else if (currentUser.rol === 'SKKM') roleText = 'SKKM Doktoru';
+            else if (currentUser.rol === 'SKKM') roleText = 'SKKM';
             
             document.getElementById('current-user-badge').textContent = `Aktif: ${currentUser.adsoyad} (${roleText})`;
             
@@ -622,7 +624,7 @@
 
             doc.setFontSize(10);
             doc.setTextColor(37, 99, 235);
-            doc.text(fixTurkishChars(`SKKM Sorumlu and Doktorlari Haftalik Ajandasi (${weekDays[0].split('-').reverse().join('.')} - ${weekDays[4].split('-').reverse().join('.')})`), 14, 18);
+            doc.text(fixTurkishChars(`SKKM Haftalik Ajandasi (${weekDays[0].split('-').reverse().join('.')} - ${weekDays[4].split('-').reverse().join('.')})`), 14, 18);
 
             doc.setFontSize(8);
             doc.setTextColor(100, 100, 100);
