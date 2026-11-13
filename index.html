@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çanakkale 112 Kurumsal Ajanda V4.1</title>
+    <title>Çanakkale 112 Kurumsal Ajanda V4.2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -81,15 +81,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <input type="text" id="admin-new-name" placeholder="Ad Soyad" required class="px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white">
                     <select id="admin-new-unit" class="px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white">
-                        <option value="Başhekimlik">Başhekimlik</option>
-                        <option value="Bilgi Sistemleri Birimi">Bilgi Sistemleri Birimi</option>
-                        <option value="Personel Birimi">Personel Birimi</option>
-                        <option value="Kalite Birimi">Kalite Birimi</option>
-                        <option value="Disiplin Birimi">Disiplin Birimi</option>
-                        <option value="Teknik Birim">Teknik Birim</option>
-                        <option value="Depo Birimi">Depo Birimi</option>
-                        <option value="Tıbbi Cihaz Birimi">Tıbbi Cihaz Birimi</option>
-                        <option value="Arşiv Birimi">Arşiv Birimi</option>
+                        <!-- JS ile birimlerListesi'nden dinamik dolacak -->
                     </select>
                     <input type="text" id="admin-new-pass" placeholder="Şifre" required class="px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white">
                 </div>
@@ -120,14 +112,7 @@
             <div id="modal-target-unit-container" class="hidden mb-3">
                 <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Hedef Birim Seçin</label>
                 <select id="modal-target-unit-select" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
-                    <option value="Personel Birimi">Personel Birimi</option>
-                    <option value="Bilgi Sistemleri Birimi">Bilgi Sistemleri Birimi</option>
-                    <option value="Kalite Birimi">Kalite Birimi</option>
-                    <option value="Disiplin Birimi">Disiplin Birimi</option>
-                    <option value="Teknik Birim">Teknik Birim</option>
-                    <option value="Depo Birimi">Depo Birimi</option>
-                    <option value="Tıbbi Cihaz Birimi">Tıbbi Cihaz Birimi</option>
-                    <option value="Arşiv Birimi">Arşiv Birimi</option>
+                    <!-- JS ile birimlerListesi'nden dinamik dolacak -->
                 </select>
             </div>
 
@@ -200,15 +185,7 @@
                 <div class="flex items-center gap-3 flex-wrap">
                     <h2 id="list-title" class="text-base font-bold text-slate-700">Haftalık Masa Ajandası</h2>
                     <select id="bashekim-unit-filter" onchange="fetchEvents()" class="hidden text-xs bg-slate-100 border border-slate-300 rounded-lg px-2.5 py-1.5 font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500">
-                        <option value="Tumu">Tüm Birimler (Ortak Görünüm)</option>
-                        <option value="Personel Birimi">Personel Birimi</option>
-                        <option value="Bilgi Sistemleri Birimi">Bilgi Sistemleri Birimi</option>
-                        <option value="Kalite Birimi">Kalite Birimi</option>
-                        <option value="Disiplin Birimi">Disiplin Birimi</option>
-                        <option value="Teknik Birim">Teknik Birim</option>
-                        <option value="Depo Birimi">Depo Birimi</option>
-                        <option value="Tıbbi Cihaz Birimi">Tıbbi Cihaz Birimi</option>
-                        <option value="Arşiv Birimi">Arşiv Birimi</option>
+                        <!-- JS ile birimlerListesi'nden dinamik dolacak -->
                     </select>
                 </div>
                 <div class="flex items-center gap-3">
@@ -235,7 +212,7 @@
         </main>
 
         <footer class="text-center py-4 text-xs text-slate-400 border-t border-slate-200 mt-6 bg-white">
-            Çanakkale İl Ambulans Servisi Başhekimliği &bull; Kurumsal Masa Ajandası V4.1
+            Çanakkale İl Ambulans Servisi Başhekimliği &bull; Kurumsal Masa Ajandası V4.2
         </footer>
     </div>
 
@@ -247,6 +224,19 @@
         const { createClient } = supabase;
         const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        // Merkezi Birimler Listesi
+        const birimlerListesi = [
+            "Başhekimlik",
+            "Bilgi Sistemleri Birimi",
+            "Personel Birimi",
+            "Kalite Birimi",
+            "Disiplin Birimi",
+            "Teknik Birim",
+            "Depo Birimi",
+            "Tıbbi Cihaz Birimi",
+            "Arşiv Birimi"
+        ];
+
         let usersList = [];
         let currentUser = null;
         let currentTab = 'bashekim';
@@ -255,6 +245,38 @@
 
         const todayStr = new Date().toISOString().split('T')[0];
         document.getElementById('filter-date').value = todayStr;
+
+        // Sayfa açıldığında birim select kutularını doldur
+        function initializeUnitSelects() {
+            const adminUnitSelect = document.getElementById('admin-new-unit');
+            const modalUnitSelect = document.getElementById('modal-target-unit-select');
+            const bashekimFilterSelect = document.getElementById('bashekim-unit-filter');
+
+            // Admin panel birim listesi
+            if (adminUnitSelect) {
+                adminUnitSelect.innerHTML = '';
+                birimlerListesi.forEach(birim => {
+                    adminUnitSelect.innerHTML += `<option value="${birim}">${birim}</option>`;
+                });
+            }
+
+            // Modal birim listesi
+            if (modalUnitSelect) {
+                modalUnitSelect.innerHTML = '';
+                birimlerListesi.forEach(birim => {
+                    modalUnitSelect.innerHTML += `<option value="${birim}">${birim}</option>`;
+                });
+            }
+
+            // Başhekim filtre listesi (Tüm birimler opsiyonuyla birlikte)
+            if (bashekimFilterSelect) {
+                bashekimFilterSelect.innerHTML = `<option value="Tumu">Tüm Birimler (Ortak Görünüm)</option>`;
+                birimlerListesi.forEach(birim => {
+                    bashekimFilterSelect.innerHTML += `<option value="${birim}">${birim}</option>`;
+                });
+            }
+        }
+        initializeUnitSelects();
 
         async function loadUsersFromSupabase() {
             const { data, error } = await _supabase.from('kullanicilar').select('*');
