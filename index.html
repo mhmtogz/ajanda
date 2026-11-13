@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- jsPDF Kütüphanesi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style> 
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; } 
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -66,12 +68,50 @@
 
     <!-- ADMIN PANELİ MODALI -->
     <div id="admin-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 border border-slate-200 max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 border border-slate-200 max-h-[90vh] overflow-y-auto">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 pb-3 border-b border-slate-100 gap-2">
                 <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-user-shield text-amber-600"></i> Yönetici Paneli (Personel Yönetimi)
+                    <i class="fa-solid fa-user-shield text-amber-600"></i> Yönetici, Aylık PDF Raporu ve Veri Yönetimi
                 </h3>
-                <button onclick="toggleAdminModal(false)" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <div class="flex items-center justify-between w-full sm:w-auto gap-3">
+                    <div id="admin-live-clock" class="text-xs bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-2xs">
+                        <i class="fa-regular fa-clock text-amber-600"></i> <span id="clock-text">Yükleniyor...</span>
+                    </div>
+                    <button onclick="toggleAdminModal(false)" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+            </div>
+
+            <!-- KAPSAMLI AYLIK PDF RAPORU -->
+            <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 mb-6 space-y-3">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-900"><i class="fa-solid fa-file-pdf mr-1"></i> Kapsamlı Aylık Yatay PDF Raporu</h4>
+                <p class="text-xs text-indigo-700">İlk sayfada Başhekimlik ortak ajandası, devamında ise her birimin ayrı sayfalarda listelendiği tam teşekküllü yatay PDF raporunu indirin.</p>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Yıl ve Ay Seçin</label>
+                        <input type="month" id="pdf-report-month" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white">
+                    </div>
+                    <div class="flex items-end">
+                        <button type="button" onclick="generateComprehensiveMonthlyPDF()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-xs">
+                            <i class="fa-solid fa-file-arrow-down"></i> Kapsamlı PDF İndir
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VERİ TEMİZLEME BÖLÜMÜ -->
+            <div class="bg-rose-50 p-4 rounded-xl border border-rose-100 mb-6 space-y-3">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-rose-900"><i class="fa-solid fa-trash-arrow-up mr-1"></i> Arşiv Veri Temizliği</h4>
+                <p class="text-xs text-rose-700">Seçilen aya ait veritabanı kayıtlarını kalıcı olarak temizleyebilirsiniz.</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <select id="pdf-report-target" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white">
+                        <option value="bashekim">Başhekimlik Genel</option>
+                        <option value="tum_birimler">Tüm Birimler Ortak</option>
+                    </select>
+                    <button type="button" onclick="clearMonthData()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1 shadow-xs">
+                        <i class="fa-solid fa-trash-can"></i> Seçilen Ayı Temizle
+                    </button>
+                </div>
             </div>
 
             <form id="admin-add-user-form" class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 space-y-3">
@@ -87,7 +127,7 @@
             </form>
 
             <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2"><i class="fa-solid fa-users mr-1"></i> Kayıtlı Personel Listesi</h4>
-            <div id="admin-user-list" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+            <div id="admin-user-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
         </div>
     </div>
 
@@ -156,7 +196,7 @@
                         <span id="current-user-badge" class="text-xs font-semibold text-white block">Aktif Kullanıcı</span>
                     </div>
                     <div class="flex items-center gap-1.5 ml-2 border-l border-white/20 pl-3">
-                        <!-- Yalnızca Başhekim ve Admin (Mehmet) için SKKM Butonu -->
+                        <!-- Yalnızca Başhekim ve Admin (Mehmet) için SKKM Paneli Düğmesi -->
                         <a href="kkm.html" id="kkm-nav-btn" class="hidden bg-blue-600 hover:bg-blue-700 text-white text-xs px-2.5 py-1.5 rounded-lg transition shadow-xs flex items-center gap-1" title="SKKM Paneli">
                             <i class="fa-solid fa-headset"></i> SKKM
                         </a>
@@ -205,6 +245,8 @@
                     </div>
                     <button onclick="changeWeek(1)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition">Sonraki Hafta <i class="fa-solid fa-chevron-right ml-1"></i></button>
                     <button onclick="fetchEvents()" class="p-2 text-slate-500 hover:text-indigo-600 rounded-xl border border-slate-200 bg-white" title="Yenile"><i class="fa-solid fa-rotate"></i></button>
+                    <!-- Haftalık Doğrudan PDF İndir Butonu -->
+                    <button onclick="generateCurrentWeekPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs" title="Bu Haftanın PDF Çıktısını Al"><i class="fa-solid fa-file-arrow-down"></i> PDF İndir</button>
                 </div>
             </div>
 
@@ -249,9 +291,33 @@
         let usersList = [];
         let currentUser = null;
         let currentTab = 'bashekim';
+        let clockInterval = null;
+        let cachedCurrentWeekEvents = [];
 
         const todayStr = new Date().toISOString().split('T')[0];
         document.getElementById('filter-date').value = todayStr;
+        document.getElementById('pdf-report-month').value = todayStr.substring(0, 7);
+
+        function fixTurkishChars(str) {
+            if (!str) return '';
+            return str
+                .replace(/Ç/g, 'C').replace(/ç/g, 'c')
+                .replace(/Ğ/g, 'G').replace(/ğ/g, 'g')
+                .replace(/İ/g, 'I').replace(/ı/g, 'i')
+                .replace(/Ö/g, 'O').replace(/ö/g, 'o')
+                .replace(/Ş/g, 'S').replace(/ş/g, 's')
+                .replace(/Ü/g, 'U').replace(/ü/g, 'u');
+        }
+
+        function updateLiveClock() {
+            const clockTextEl = document.getElementById('clock-text');
+            if (!clockTextEl) return;
+            const now = new Date();
+            const options = { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' };
+            const dateStr = now.toLocaleDateString('tr-TR', options);
+            const timeStr = now.toLocaleTimeString('tr-TR');
+            clockTextEl.textContent = `${dateStr} - ${timeStr}`;
+        }
 
         function initializeUnitSelects() {
             const adminUnitSelect = document.getElementById('admin-new-unit');
@@ -299,10 +365,10 @@
             const { data, error } = await _supabase.from('kullanicilar').select('*');
             if (error) { console.error("Kullanıcılar yüklenemedi:", error); return; }
             
-            // Başhekimlik ana ajandasında SKKM kullanıcıları listelenmesin
             const allUsers = data || [];
             usersList = allUsers.filter(u => u.rol !== 'SKKM Sor.' && u.rol !== 'SKKM');
             populateLoginSelect();
+            checkStoredSession();
         }
 
         function populateLoginSelect() {
@@ -317,6 +383,43 @@
         }
         loadUsersFromSupabase();
 
+        function checkStoredSession() {
+            const savedUser = localStorage.getItem('canakkale_112_user');
+            if (savedUser) {
+                try {
+                    const parsedUser = JSON.parse(savedUser);
+                    const found = usersList.find(u => u.adsoyad === parsedUser.adsoyad);
+                    if (found) {
+                        currentUser = { adsoyad: found.adsoyad, birim: found.birim, rol: found.rol };
+                        startAppSession();
+                    }
+                } catch (e) {
+                    localStorage.removeItem('canakkale_112_user');
+                }
+            }
+        }
+
+        function startAppSession() {
+            document.getElementById('login-modal').classList.add('hidden');
+            const appContainer = document.getElementById('app-container');
+            appContainer.classList.remove('hidden');
+            appContainer.classList.add('flex');
+
+            document.getElementById('current-user-badge').textContent = `Aktif: ${currentUser.adsoyad} (${currentUser.birim})`;
+            
+            const isManager = (currentUser.adsoyad === 'Mehmet' || currentUser.rol === 'bashekim');
+            if (isManager) {
+                document.getElementById('admin-btn').classList.remove('hidden');
+                document.getElementById('kkm-nav-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('admin-btn').classList.add('hidden');
+                document.getElementById('kkm-nav-btn').classList.add('hidden');
+            }
+
+            updateThemeAndPermissions();
+            fetchEvents();
+        }
+
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
             const selectedName = document.getElementById('login-user-select').value;
@@ -327,26 +430,8 @@
 
             if (foundUser && (foundUser.sifre === enteredPass || (foundUser.adsoyad === 'Mehmet' && enteredPass === '1717'))) {
                 currentUser = { adsoyad: foundUser.adsoyad, birim: foundUser.birim, rol: foundUser.rol };
-
-                document.getElementById('login-modal').classList.add('hidden');
-                const appContainer = document.getElementById('app-container');
-                appContainer.classList.remove('hidden');
-                appContainer.classList.add('flex');
-
-                document.getElementById('current-user-badge').textContent = `Aktif: ${currentUser.adsoyad} (${currentUser.birim})`;
-                
-                // Yalnızca Sertaç (Başhekim) ve Mehmet (Admin) için Admin ve SKKM butonları görünür
-                const isManager = (currentUser.adsoyad === 'Mehmet' || currentUser.rol === 'bashekim');
-                if (isManager) {
-                    document.getElementById('admin-btn').classList.remove('hidden');
-                    document.getElementById('kkm-nav-btn').classList.remove('hidden');
-                } else {
-                    document.getElementById('admin-btn').classList.add('hidden');
-                    document.getElementById('kkm-nav-btn').classList.add('hidden');
-                }
-
-                updateThemeAndPermissions();
-                fetchEvents();
+                localStorage.setItem('canakkale_112_user', JSON.stringify(currentUser));
+                startAppSession();
             } else {
                 errorEl.classList.remove('hidden');
             }
@@ -354,6 +439,7 @@
 
         function logout() {
             currentUser = null;
+            localStorage.removeItem('canakkale_112_user');
             document.getElementById('login-pass').value = '';
             document.getElementById('login-error').classList.add('hidden');
             const appContainer = document.getElementById('app-container');
@@ -383,8 +469,16 @@
 
         function toggleAdminModal(show) {
             const modal = document.getElementById('admin-modal');
-            if (show) { renderAdminUserList(); modal.classList.remove('hidden'); }
-            else { modal.classList.add('hidden'); }
+            if (show) { 
+                renderAdminUserList(); 
+                modal.classList.remove('hidden');
+                updateLiveClock();
+                if (clockInterval) clearInterval(clockInterval);
+                clockInterval = setInterval(updateLiveClock, 1000);
+            } else { 
+                modal.classList.add('hidden');
+                if (clockInterval) clearInterval(clockInterval);
+            }
         }
 
         function renderAdminUserList() {
@@ -627,6 +721,8 @@
             const { data, error } = await query.order('saat', { ascending: true });
             if (error) { console.error(error); return; }
 
+            cachedCurrentWeekEvents = data || [];
+
             const headerEl = document.getElementById('calendar-header');
             const bodyEl = document.getElementById('calendar-body');
 
@@ -638,18 +734,15 @@
             let activeThemeColorClass = 'text-indigo-700 bg-indigo-50';
             let activeThemeBadgeClass = 'bg-indigo-600 text-white';
             let hoverThemeClass = 'hover:bg-indigo-50/40';
-            let badgeBgClass = 'bg-indigo-50 text-indigo-700 border-indigo-200';
 
             if (currentTab === 'birim') {
                 activeThemeColorClass = 'text-amber-700 bg-amber-50';
                 activeThemeBadgeClass = 'bg-amber-600 text-white';
                 hoverThemeClass = 'hover:bg-amber-50/40';
-                badgeBgClass = 'bg-amber-50 text-amber-700 border-amber-200';
             } else if (currentTab === 'kisisel') {
                 activeThemeColorClass = 'text-emerald-700 bg-emerald-50';
                 activeThemeBadgeClass = 'bg-emerald-600 text-white';
                 hoverThemeClass = 'hover:bg-emerald-50/40';
-                badgeBgClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
             }
 
             let headerHtml = `<th class="p-3 text-xs font-bold text-slate-500 uppercase border-r border-slate-200 bg-slate-100 text-center w-24">Saat</th>`;
@@ -687,7 +780,7 @@
                     rowHtml += `
                         <td class="p-1.5 border-r border-slate-200 align-top h-16 cursor-pointer ${hoverThemeClass} transition group relative" 
                             onclick="toggleEventModal(true, '${dateStr}', '${time}')" title="Bu saate plan eklemek için tıklayın">
-                            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 flex items-center justify-center pointer-events-none">
+                            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 flex items-center justify-center pointer-events-none z-20">
                                 <span class="text-[10px] ${activeThemeBadgeClass} px-1.5 py-0.5 rounded shadow-xs"><i class="fa-solid fa-plus"></i> Ekle</span>
                             </div>
                             <div class="space-y-1 z-10 relative slot-container-${dateStr}-${time.replace(':', '')}"></div>
@@ -699,23 +792,26 @@
                 bodyEl.appendChild(row);
             });
 
-            if (data && data.length > 0) {
-                data.forEach(ev => {
+            if (cachedCurrentWeekEvents && cachedCurrentWeekEvents.length > 0) {
+                cachedCurrentWeekEvents.forEach(ev => {
                     const timeClassSafe = ev.saat.replace(':', '');
                     const container = document.querySelector(`.slot-container-${ev.tarih}-${timeClassSafe}`);
                     
                     if (container) {
                         const card = document.createElement('div');
-                        card.className = `p-1.5 ${badgeBgClass} border rounded-lg text-xs space-y-1 relative group/card shadow-2xs`;
                         
-                        let statusBadge = '';
+                        let cardBgClass = 'bg-sky-50 text-sky-900 border-sky-200';
+                        let statusBadge = `<span class="text-[9px] bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded-full font-bold">Planlandı</span>`;
+
                         if (ev.durum === 'Gerçekleşti') {
+                            cardBgClass = 'bg-emerald-50 text-emerald-900 border-emerald-200';
                             statusBadge = `<span class="text-[9px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full font-bold">Gerçekleşti</span>`;
                         } else if (ev.durum === 'İptal') {
+                            cardBgClass = 'bg-rose-50 text-rose-900 border-rose-200';
                             statusBadge = `<span class="text-[9px] bg-rose-100 text-rose-800 px-1.5 py-0.5 rounded-full font-bold">İptal</span>`;
-                        } else {
-                            statusBadge = `<span class="text-[9px] bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded-full font-bold">Planlandı</span>`;
                         }
+
+                        card.className = `p-1.5 ${cardBgClass} border rounded-lg text-xs space-y-1 relative group/card shadow-2xs`;
 
                         let actionButtons = '';
                         if (ev.ekleyen_kisi === currentUser.adsoyad || currentUser.rol === 'bashekim') {
@@ -737,7 +833,7 @@
                                 <span class="font-semibold text-[11px]"><i class="fa-regular fa-user mr-0.5 text-[9px]"></i>${escapeHtml(ev.ekleyen_kisi)}</span>
                                 ${statusBadge}
                             </div>
-                            <p class="text-slate-700 text-[11px] leading-tight whitespace-pre-wrap">${escapeHtml(ev.aciklama)}</p>
+                            <p class="text-[11px] leading-tight whitespace-pre-wrap">${escapeHtml(ev.aciklama)}</p>
                             ${actionButtons}
                         `;
                         container.appendChild(card);
@@ -762,6 +858,258 @@
             if (confirm("Bu kaydı silmek istediğinize emin misiniz?")) {
                 await _supabase.from('ajanda_notlari').delete().eq('id', id);
                 fetchEvents();
+            }
+        }
+
+        // --- HAFTALIK YATAY PDF İNDİR ---
+        function generateCurrentWeekPDF() {
+            const filterDate = document.getElementById('filter-date').value;
+            const weekDays = getWorkWeekDates(filterDate);
+            
+            if (!cachedCurrentWeekEvents || cachedCurrentWeekEvents.length === 0) {
+                alert("Bu hafta ekranda gösterilecek kayıtlı plan bulunmamaktadır.");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+
+            const dayNamesTR = ['Pazartesi', 'Sali', 'Carsamba', 'Persembe', 'Cuma'];
+            const tabTitleMap = {
+                'bashekim': 'Bashekimlik Genel Masa Ajandasi',
+                'birim': currentUser.rol === 'bashekim' ? 'Tum Birimler Ortak Ajandasi' : `${currentUser.birim} Ortak Ajandasi`,
+                'kisisel': `${currentUser.adsoyad} - Kisisel Ajanda`
+            };
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(13);
+            doc.setTextColor(30, 41, 59);
+            doc.text(fixTurkishChars("CANAKKALE IL AMBULANS SERVISI BASHEKIMLIGI"), 14, 12);
+
+            doc.setFontSize(10);
+            doc.setTextColor(79, 70, 229);
+            const reportTitle = tabTitleMap[currentTab] || 'Haftalik Masa Ajandasi';
+            doc.text(fixTurkishChars(`${reportTitle} (${weekDays[0].split('-').reverse().join('.')} - ${weekDays[4].split('-').reverse().join('.')})`), 14, 18);
+
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            doc.text(fixTurkishChars(`Rapor Olusturma: ${new Date().toLocaleDateString('tr-TR')}`), 14, 23);
+
+            let startY = 30;
+            doc.setFontSize(9);
+
+            const sortedEvents = [...cachedCurrentWeekEvents].sort((a, b) => a.tarih.localeCompare(b.tarih) || a.saat.localeCompare(b.saat));
+
+            sortedEvents.forEach(ev => {
+                if (startY > 185) return;
+
+                const [y, m, d] = ev.tarih.split('-');
+                const dayIndex = weekDays.indexOf(ev.tarih);
+                const dayName = dayIndex !== -1 ? dayNamesTR[dayIndex] : '';
+                const birimTag = (currentTab === 'birim' && currentUser.rol === 'bashekim' && ev.hedef_birim) ? `[${ev.hedef_birim}] ` : '';
+
+                doc.setFillColor(248, 250, 252);
+                doc.setDrawColor(203, 213, 225);
+                doc.roundedRect(14, startY, 269, 11, 1, 1, 'FD');
+
+                doc.setFont("helvetica", "bold");
+                doc.setTextColor(30, 41, 59);
+                doc.text(fixTurkishChars(`${dayName}, ${d}.${m}.${y} - Saat: ${ev.saat}`), 18, startY + 7);
+
+                doc.setFont("helvetica", "normal");
+                doc.text(fixTurkishChars(`${birimTag}${ev.ekleyen_kisi}: ${ev.aciklama} (${ev.durum || 'Planlandi'})`), 85, startY + 7);
+
+                startY += 14;
+            });
+
+            doc.save(`Canakkale_112_Haftalik_Ajanda_${weekDays[0]}.pdf`);
+        }
+
+        // --- KAPSAMLI AYLIK PDF RAPORU (ADMIN) ---
+        async function generateComprehensiveMonthlyPDF() {
+            const monthInput = document.getElementById('pdf-report-month').value;
+            if (!monthInput) { alert("Lütfen bir ay seçin."); return; }
+
+            const [year, month] = monthInput.split('-');
+            const firstDayOfMonth = new Date(year, month - 1, 1);
+            const lastDayOfMonth = new Date(year, month, 0);
+
+            let curr = new Date(firstDayOfMonth);
+            const day = curr.getDay();
+            const diffToMonday = curr.getDate() - day + (day === 0 ? -6 : 1);
+            curr.setDate(diffToMonday);
+
+            const mondaysOfWeeks = [];
+            while (curr <= lastDayOfMonth) {
+                mondaysOfWeeks.push(new Date(curr).toISOString().split('T')[0]);
+                curr.setDate(curr.getDate() + 7);
+            }
+
+            const startDateStr = `${year}-${month}-01`;
+            const endDateStr = `${year}-${month}-${lastDayOfMonth.getDate()}`;
+
+            const { data: allEvents, error } = await _supabase.from('ajanda_notlari').select('*')
+                .gte('tarih', startDateStr)
+                .lte('tarih', endDateStr);
+
+            if (error) { alert("Veriler çekilemedi: " + error.message); return; }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+
+            const monthNamesTR = ["Ocak", "Subat", "Mart", "Nisan", "Mayis", "Haziran", "Temmuz", "Agustos", "Eylul", "Ekim", "Kasim", "Aralik"];
+            const monthTitleStr = `${monthNamesTR[parseInt(month)-1]} ${year}`;
+            const dayNamesTR = ['Pazartesi', 'Sali', 'Carsamba', 'Persembe', 'Cuma'];
+
+            mondaysOfWeeks.forEach((mondayStr, weekIndex) => {
+                const weekDates = [];
+                const mDate = new Date(mondayStr);
+                for (let i = 0; i < 5; i++) {
+                    const d = new Date(mDate);
+                    d.setDate(mDate.getDate() + i);
+                    weekDates.push(d.toISOString().split('T')[0]);
+                }
+
+                const bashekimWeekEvents = (allEvents || []).filter(ev => ev.tur === 'bashekim' && weekDates.includes(ev.tarih));
+                if (bashekimWeekEvents.length === 0 && weekIndex > 0) return;
+
+                if (doc.internal.getNumberOfPages() > 1 || weekIndex > 0) {
+                    doc.addPage();
+                }
+
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(13);
+                doc.setTextColor(30, 41, 59);
+                doc.text(fixTurkishChars("CANAKKALE IL AMBULANS SERVISI BASHEKIMLIGI"), 14, 12);
+
+                doc.setFontSize(10);
+                doc.setTextColor(79, 70, 229);
+                doc.text(fixTurkishChars(`Bashekimlik Genel Ortak Ajandasi (${monthTitleStr} - ${weekIndex + 1}. Hafta)`), 14, 18);
+
+                doc.setFontSize(8);
+                doc.setTextColor(100, 100, 100);
+                doc.text(fixTurkishChars(`Tarih Araligi: ${weekDates[0].split('-').reverse().join('.')} - ${weekDates[4].split('-').reverse().join('.')}`), 14, 23);
+
+                let startY = 30;
+                doc.setFontSize(9);
+
+                if (bashekimWeekEvents.length === 0) {
+                    doc.setFont("helvetica", "italic");
+                    doc.setTextColor(150, 150, 150);
+                    doc.text(fixTurkishChars("Bu hafta için kayıtlı plan bulunmamaktadır."), 14, startY + 10);
+                } else {
+                    bashekimWeekEvents.sort((a, b) => a.tarih.localeCompare(b.tarih) || a.saat.localeCompare(b.saat));
+                    bashekimWeekEvents.forEach(ev => {
+                        if (startY > 185) return;
+                        const [y, m, d] = ev.tarih.split('-');
+                        const dayIndex = weekDates.indexOf(ev.tarih);
+                        const dayName = dayIndex !== -1 ? dayNamesTR[dayIndex] : '';
+
+                        doc.setFillColor(248, 250, 252);
+                        doc.setDrawColor(203, 213, 225);
+                        doc.roundedRect(14, startY, 269, 11, 1, 1, 'FD');
+
+                        doc.setFont("helvetica", "bold");
+                        doc.setTextColor(30, 41, 59);
+                        doc.text(fixTurkishChars(`${dayName}, ${d}.${m}.${y} - Saat: ${ev.saat}`), 18, startY + 7);
+
+                        doc.setFont("helvetica", "normal");
+                        doc.text(fixTurkishChars(`${ev.ekleyen_kisi}: ${ev.aciklama} (${ev.durum || 'Planlandi'})`), 85, startY + 7);
+
+                        startY += 14;
+                    });
+                }
+            });
+
+            birimlerListesi.forEach(birimName => {
+                mondaysOfWeeks.forEach((mondayStr, weekIndex) => {
+                    const weekDates = [];
+                    const mDate = new Date(mondayStr);
+                    for (let i = 0; i < 5; i++) {
+                        const d = new Date(mDate);
+                        d.setDate(mDate.getDate() + i);
+                        weekDates.push(d.toISOString().split('T')[0]);
+                    }
+
+                    const birimWeekEvents = (allEvents || []).filter(ev => ev.tur === 'birim' && ev.hedef_birim === birimName && weekDates.includes(ev.tarih));
+                    if (birimWeekEvents.length === 0) return;
+
+                    doc.addPage();
+
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(13);
+                    doc.setTextColor(30, 41, 59);
+                    doc.text(fixTurkishChars("CANAKKALE IL AMBULANS SERVISI BASHEKIMLIGI"), 14, 12);
+
+                    doc.setFontSize(10);
+                    doc.setTextColor(217, 119, 6);
+                    doc.text(fixTurkishChars(`${birimName} Ajandasi (${monthTitleStr} - ${weekIndex + 1}. Hafta)`), 14, 18);
+
+                    doc.setFontSize(8);
+                    doc.setTextColor(100, 100, 100);
+                    doc.text(fixTurkishChars(`Tarih Araligi: ${weekDates[0].split('-').reverse().join('.')} - ${weekDates[4].split('-').reverse().join('.')}`), 14, 23);
+
+                    let startY = 30;
+                    doc.setFontSize(9);
+                    birimWeekEvents.sort((a, b) => a.tarih.localeCompare(b.tarih) || a.saat.localeCompare(b.saat));
+
+                    birimWeekEvents.forEach(ev => {
+                        if (startY > 185) return;
+                        const [y, m, d] = ev.tarih.split('-');
+                        const dayIndex = weekDates.indexOf(ev.tarih);
+                        const dayName = dayIndex !== -1 ? dayNamesTR[dayIndex] : '';
+
+                        doc.setFillColor(254, 252, 232);
+                        doc.setDrawColor(253, 230, 138);
+                        doc.roundedRect(14, startY, 269, 11, 1, 1, 'FD');
+
+                        doc.setFont("helvetica", "bold");
+                        doc.setTextColor(30, 41, 59);
+                        doc.text(fixTurkishChars(`${dayName}, ${d}.${m}.${y} - Saat: ${ev.saat}`), 18, startY + 7);
+
+                        doc.setFont("helvetica", "normal");
+                        doc.text(fixTurkishChars(`${ev.ekleyen_kisi}: ${ev.aciklama} (${ev.durum || 'Planlandi'})`), 85, startY + 7);
+
+                        startY += 14;
+                    });
+                });
+            });
+
+            doc.save(`Canakkale_112_Kurumsal_Tam_Ajanda_Raporu_${year}_${month}.pdf`);
+            toggleAdminModal(false);
+        }
+
+        async function clearMonthData() {
+            const monthInput = document.getElementById('pdf-report-month').value;
+            const targetType = document.getElementById('pdf-report-target').value;
+            if (!monthInput) { alert("Lütfen temizlenecek ayı seçin."); return; }
+
+            const [year, month] = monthInput.split('-');
+            const lastDayOfMonth = new Date(year, month, 0).getDate();
+            const startDateStr = `${year}-${month}-01`;
+            const endDateStr = `${year}-${month}-${lastDayOfMonth}`;
+
+            const confirmMsg = `DİKKAT: ${month}/${year} dönemine ait verileri kalıcı olarak silmek istediğinize emin misiniz?`;
+            
+            if (confirm(confirmMsg)) {
+                let query = _supabase.from('ajanda_notlari').delete()
+                    .gte('tarih', startDateStr)
+                    .lte('tarih', endDateStr);
+
+                if (targetType === 'bashekim') {
+                    query = query.eq('tur', 'bashekim');
+                } else {
+                    query = query.eq('tur', 'birim');
+                }
+
+                const { error } = await query;
+                if (error) {
+                    alert("Veriler temizlenirken hata oluştu: " + error.message);
+                } else {
+                    alert("Seçilen dönemin verileri başarıyla temizlendi.");
+                    fetchEvents();
+                    toggleAdminModal(false);
+                }
             }
         }
 
