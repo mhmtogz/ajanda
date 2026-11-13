@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çanakkale 112 KKM Sorumlu ve Doktorları Ajandası V1.1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- jsPDF Kütüphanesi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style> 
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; } 
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body id="page-body" class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between transition-colors duration-300">
+
+    <!-- GİRİŞ EKRANI (Supabaseullanicilar Tablosundan Çeker) -->
+    <div id="login-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 sm:p-8 border border-slate-200">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner">
+                    <i class="fa-solid fa-headset"></i>
+                </div>
+                <h2 class="text-xl font-bold text-slate-800">KKM Sorumlu & Doktor Girişi</h2>
+                <p class="text-xs text-slate-500 mt-1">Lütfen adınızı seçin ve şifrenizi girin.</p>
+            </div>
+            
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Kullanıcı Seçin</label>
+                    <select id="login-user-select" class="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Şifre</label>
+                    <input type="password" id="login-pass" placeholder="Şifrenizi giriniz..." required class="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                </div>
+                <div id="login-error" class="hidden text-xs text-rose-600 bg-rose-50 p-2.5 rounded-lg text-center font-medium border border-rose-200">
+                    Hatalı şifre! Lütfen tekrar deneyin.
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-xl transition duration-200 text-sm shadow-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i> Sisteme Giriş Yap
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- PLAN EKLEME / DÜZENLEME / DURUM DEĞİŞTİRME MODALI -->
+    <div id="event-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-200">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
+                <h3 id="modal-title" class="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-square-plus text-blue-600"></i> Plan İşlemi
+                </h3>
+                <button onclick="toggleEventModal(false)" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            
+            <form id="modal-agenda-form" class="space-y-3">
+                <input type="hidden" id="edit-event-id">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Tarih</label>
+                        <input type="date" id="modal-event-date" required class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Saat</label>
+                        <select id="modal-event-time" required class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white"></select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Durum</label>
+                    <select id="modal-event-status" onchange="checkStatusChange()" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm bg-white">
+                        <option value="Planlandı">Planlandı</option>
+                        <option value="Gerçekleşti">Gerçekleşti</option>
+                        <option value="İptal">İptal</option>
+                    </select>
+                </div>
+                <div id="cancel-reason-container" class="hidden">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-rose-600 mb-1">İptal Gerekçesi / Açıklama *</label>
+                    <textarea id="modal-cancel-reason" rows="2" placeholder="İptal sebebini yazınız..." class="w-full px-3 py-2 border border-rose-300 rounded-xl text-sm bg-rose-50/50 resize-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Açıklama / Görev Detayı</label>
+                    <textarea id="modal-event-desc" rows="3" placeholder="Görev detayını yazınız..." required class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm resize-none"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-xl transition duration-200 text-sm shadow-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> Kaydı Kaydet
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ANA UYGULAMA -->
+    <div id="app-container" class="hidden flex-col min-h-screen justify-between">
+        <header class="bg-blue-600 text-white shadow-md py-4 px-4">
+            <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight"><i class="fa-solid fa-headset mr-2"></i> KKM Sorumlu ve Doktorları Ajandası</h1>
+                    <p class="text-white/80 text-xs mt-0.5">Çanakkale İl Ambulans Servisi Komuta Kontrol Merkezi</p>
+                </div>
+                
+                <div class="flex items-center gap-3 bg-black/10 px-4 py-2 rounded-xl border border-white/20 text-sm">
+                    <i class="fa-solid fa-user-check text-emerald-300"></i>
+                    <div>
+                        <span id="current-user-badge" class="text-xs font-semibold text-white block">Aktif Kullanıcı</span>
+                    </div>
+                    <div class="flex items-center gap-2 ml-2 border-l border-white/20 pl-3">
+                        <a href="index.html" class="bg-indigo-700 hover:bg-indigo-800 text-white text-xs px-2.5 py-1.5 rounded-lg transition shadow-xs" title="Ana Sayfaya Dön">
+                            <i class="fa-solid fa-house"></i> Ana Sayfa
+                        </a>
+                        <button onclick="logout()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs px-2.5 py-1.5 rounded-lg transition shadow-xs" title="Güvenli Çıkış">
+                            <i class="fa-solid fa-power-off"></i> Çıkış
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Ana İçerik -->
+        <main class="max-w-[1400px] w-full mx-auto p-4 sm:p-6 flex-grow flex flex-col mt-2">
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <h2 class="text-base font-bold text-slate-700">KKM Haftalık Çalışma ve Nöbet Ajandası</h2>
+                </div>
+                <div class="flex items-center gap-3 flex-wrap">
+                    <button id="add-plan-btn" onclick="openNewEventModal()" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs"><i class="fa-solid fa-square-plus"></i> Plan Ekle</button>
+                    <button onclick="changeWeek(-1)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition"><i class="fa-solid fa-chevron-left mr-1"></i> Önceki Hafta</button>
+                    <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-300 px-3 py-1 rounded-xl">
+                        <label class="text-xs font-semibold text-slate-500">Hafta:</label>
+                        <input type="date" id="filter-date" class="bg-transparent text-sm focus:outline-none text-slate-700 font-medium">
+                    </div>
+                    <button onclick="changeWeek(1)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition">Sonraki Hafta <i class="fa-solid fa-chevron-right ml-1"></i></button>
+                    <button onclick="fetchEvents()" class="p-2 text-slate-500 hover:text-blue-600 rounded-xl border border-slate-200 bg-white" title="Yenile"><i class="fa-solid fa-rotate"></i></button>
+                    <!-- Haftalık PDF İndir Butonu -->
+                    <button onclick="generateCurrentWeekPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs" title="Bu Haftanın PDF Çıktısını Al"><i class="fa-solid fa-file-arrow-down"></i> PDF İndir</button>
+                </div>
+            </div>
+
+            <!-- Masa Takvimi Matrisi (Pazartesi - Cuma, 5 Gün) -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-grow overflow-hidden flex flex-col">
+                <div class="overflow-x-auto overflow-y-auto max-h-[700px] custom-scrollbar flex-grow">
+                    <table class="w-full border-collapse text-left min-w-[900px]">
+                        <thead>
+                            <tr id="calendar-header" class="bg-slate-50 border-b border-slate-200 sticky top-0 z-20"></tr>
+                        </thead>
+                        <tbody id="calendar-body" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <footer class="text-center py-4 text-xs text-slate-400 border-t border-slate-200 mt-6 bg-white">
+            Çanakkale İl Ambulans Servisi KKM &bull; Sorumlu ve Doktorları Ajandası V1.1
+        </footer>
+    </div>
+
+    <!-- JavaScript Mantığı -->
+    <script>
+        const SUPABASE_URL = 'https://dpwlgbnkqdolmczxtcbq.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_V7L29utZTCM125k55AD8Vg_Zv5z6S2q';
+
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let usersList = [];
+        let currentUser = null;
+        let cachedCurrentWeekEvents = [];
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        document.getElementById('filter-date').value = todayStr;
+
+        function fixTurkishChars(str) {
+            if (!str) return '';
+            return str
+                .replace(/Ç/g, 'C').replace(/ç/g, 'c')
+                .replace(/Ğ/g, 'G').replace(/ğ/g, 'g')
+                .replace(/İ/g, 'I').replace(/ı/g, 'i')
+                .replace(/Ö/g, 'O').replace(/ö/g, 'o')
+                .replace(/Ş/g, 'S').replace(/ş/g, 's')
+                .replace(/Ü/g, 'U').replace(/ü/g, 'u');
+        }
+
+        async function loadUsersFromSupabase() {
+            const { data, error } = await _supabase.from('kullanicilar').select('*');
+            if (error) { console.error("Kullanıcılar yüklenemedi:", error); return; }
+            usersList = data || [];
+            populateLoginSelect();
+            checkStoredSession();
+        }
+
+        function populateLoginSelect() {
+            const loginSelectEl = document.getElementById('login-user-select');
+            loginSelectEl.innerHTML = '';
+            usersList.forEach(user => {
+                const opt = document.createElement('option');
+                opt.value = user.adsoyad;
+                let roleLabel = user.rol;
+                if (user.rol === 'SKKM Sor.') roleLabel = 'KKM Sorumlusu';
+                else if (user.rol === 'SKKM') roleLabel = 'KKM Doktoru';
+                else if (user.adsoyad === 'Mehmet' || user.rol === 'bashekim') roleLabel = 'Başhekim / Admin';
+                
+                opt.textContent = `${user.adsoyad} (${roleLabel})`;
+                loginSelectEl.appendChild(opt);
+            });
+        }
+        loadUsersFromSupabase();
+
+        function checkStoredSession() {
+            const savedUser = localStorage.getItem('canakkale_112_kkm_user');
+            if (savedUser) {
+                try {
+                    const parsedUser = JSON.parse(savedUser);
+                    const found = usersList.find(u => u.adsoyad === parsedUser.adsoyad);
+                    if (found) {
+                        currentUser = found;
+                        startAppSession();
+                    }
+                } catch (e) {
+                    localStorage.removeItem('canakkale_112_kkm_user');
+                }
+            }
+        }
+
+        function startAppSession() {
+            document.getElementById('login-modal').classList.add('hidden');
+            const appContainer = document.getElementById('app-container');
+            appContainer.classList.remove('hidden');
+            appContainer.classList.add('flex');
+
+            let roleText = currentUser.rol;
+            if (currentUser.rol === 'SKKM Sor.') roleText = 'KKM Sorumlusu';
+            else if (currentUser.rol === 'SKKM') roleText = 'KKM Doktoru';
+            
+            document.getElementById('current-user-badge').textContent = `Aktif: ${currentUser.adsoyad} (${roleText})`;
+            
+            // Sadece SKKM Sor. veya Mehmet (Admin) yeni plan ekleyebilir
+            if (currentUser.rol === 'SKKM Sor.' || currentUser.adsoyad === 'Mehmet' || currentUser.rol === 'bashekim') {
+                document.getElementById('add-plan-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('add-plan-btn').classList.add('hidden');
+            }
+
+            fetchEvents();
+        }
+
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const selectedName = document.getElementById('login-user-select').value;
+            const enteredPass = document.getElementById('login-pass').value.trim().toLowerCase();
+            const errorEl = document.getElementById('login-error');
+
+            const foundUser = usersList.find(u => u.adsoyad === selectedName);
+
+            if (foundUser && (foundUser.sifre === enteredPass || (foundUser.adsoyad === 'Mehmet' && enteredPass === '1717'))) {
+                currentUser = foundUser;
+                localStorage.setItem('canakkale_112_kkm_user', JSON.stringify(currentUser));
+                startAppSession();
+            } else {
+                errorEl.classList.remove('hidden');
+            }
+        });
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('canakkale_112_kkm_user');
+            document.getElementById('login-pass').value = '';
+            document.getElementById('login-error').classList.add('hidden');
+            const appContainer = document.getElementById('app-container');
+            appContainer.classList.remove('flex');
+            appContainer.classList.add('hidden');
+            document.getElementById('login-modal').classList.remove('hidden');
+        }
+
+        function populateTimeOptions() {
+            const timeSelect = document.getElementById('modal-event-time');
+            timeSelect.innerHTML = '';
+            const minutes = ['00', '30'];
+            for (let h = 8; h <= 17; h++) {
+                const hourStr = h < 10 ? '0' + h : '' + h;
+                for (let m of minutes) {
+                    const timeVal = `${hourStr}:${m}`;
+                    const opt = document.createElement('option');
+                    opt.value = timeVal;
+                    opt.textContent = timeVal;
+                    timeSelect.appendChild(opt);
+                }
+            }
+            const optEnd = document.createElement('option');
+            optEnd.value = '17:30';
+            optEnd.textContent = '17:30';
+            timeSelect.appendChild(optEnd);
+        }
+        populateTimeOptions();
+
+        function changeWeek(direction) {
+            const filterDateInput = document.getElementById('filter-date');
+            const currDate = new Date(filterDateInput.value);
+            currDate.setDate(currDate.getDate() + (direction * 7));
+            filterDateInput.value = currDate.toISOString().split('T')[0];
+            fetchEvents();
+        }
+
+        function getWorkWeekDates(dateStr) {
+            const curr = new Date(dateStr);
+            const day = curr.getDay();
+            const diffToMonday = curr.getDate() - day + (day === 0 ? -6 : 1);
+            const monday = new Date(curr.setDate(diffToMonday));
+            const weekDates = [];
+            for (let i = 0; i < 5; i++) {
+                const nextDay = new Date(monday);
+                nextDay.setDate(monday.getDate() + i);
+                weekDates.push(nextDay.toISOString().split('T')[0]);
+            }
+            return weekDates;
+        }
+
+        function openNewEventModal() {
+            if (currentUser.rol !== 'SKKM Sor.' && currentUser.adsoyad !== 'Mehmet' && currentUser.rol !== 'bashekim') {
+                alert("Yeni plan ekleme yetkisi yalnızca SKKM Sorumlusu'ndadır.");
+                return;
+            }
+            document.getElementById('edit-event-id').value = '';
+            document.getElementById('modal-event-date').value = document.getElementById('filter-date').value;
+            document.getElementById('modal-event-time').selectedIndex = 0;
+            document.getElementById('modal-event-status').value = 'Planlandı';
+            document.getElementById('modal-event-desc').value = '';
+            document.getElementById('cancel-reason-container').classList.add('hidden');
+            
+            document.getElementById('modal-event-date').disabled = false;
+            document.getElementById('modal-event-time').disabled = false;
+            document.getElementById('modal-event-desc').disabled = false;
+            document.getElementById('modal-event-status').disabled = false;
+
+            toggleEventModal(true);
+        }
+
+        function checkStatusChange() {
+            const status = document.getElementById('modal-event-status').value;
+            const cancelContainer = document.getElementById('cancel-reason-container');
+            if (status === 'İptal') {
+                cancelContainer.classList.remove('hidden');
+            } else {
+                cancelContainer.classList.add('hidden');
+            }
+        }
+
+        function toggleEventModal(show, eventData = null) {
+            const modal = document.getElementById('event-modal');
+            if (show) {
+                if (eventData) {
+                    document.getElementById('edit-event-id').value = eventData.id;
+                    document.getElementById('modal-event-date').value = eventData.tarih;
+                    document.getElementById('modal-event-time').value = eventData.saat;
+                    document.getElementById('modal-event-status').value = eventData.durum || 'Planlandı';
+                    document.getElementById('modal-event-desc').value = eventData.aciklama;
+                    document.getElementById('modal-cancel-reason').value = '';
+                    
+                    checkStatusChange();
+
+                    // Yetki Kısıtlaması: SKKM sadece durum değiştirebilir
+                    const isManager = (currentUser.rol === 'SKKM Sor.' || currentUser.adsoyad === 'Mehmet' || currentUser.rol === 'bashekim');
+                    if (!isManager) {
+                        document.getElementById('modal-event-date').disabled = true;
+                        document.getElementById('modal-event-time').disabled = true;
+                        document.getElementById('modal-event-desc').disabled = true;
+                        document.getElementById('modal-event-status').disabled = false;
+                    } else {
+                        document.getElementById('modal-event-date').disabled = false;
+                        document.getElementById('modal-event-time').disabled = false;
+                        document.getElementById('modal-event-desc').disabled = false;
+                        document.getElementById('modal-event-status').disabled = false;
+                    }
+                }
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('modal-agenda-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const eventId = document.getElementById('edit-event-id').value;
+            const status = document.getElementById('modal-event-status').value;
+            const cancelReason = document.getElementById('modal-cancel-reason').value.trim();
+
+            if (status === 'İptal' && !cancelReason) {
+                alert("Lütfen planı iptal etme gerekçesini açıklama alanına yazınız.");
+                return;
+            }
+
+            const isManager = (currentUser.rol === 'SKKM Sor.' || currentUser.adsoyad === 'Mehmet' || currentUser.rol === 'bashekim');
+
+            if (eventId) {
+                if (!isManager) {
+                    // SKKM sadece durum güncelleyebilir, iptal gerekçesini nota ekler
+                    const existingEv = cachedCurrentWeekEvents.find(e => e.id == eventId);
+                    let baseDesc = existingEv ? existingEv.aciklama : '';
+                    const finalDesc = cancelReason ? `${baseDesc} [İPTAL GEREKÇESİ: ${cancelReason}]` : baseDesc;
+
+                    const { error } = await _supabase.from('ajanda_notlari').update({
+                        durum: status,
+                        aciklama: finalDesc
+                    }).eq('id', eventId);
+
+                    if (error) { alert("Güncelleme hatası: " + error.message); return; }
+                } else {
+                    const tarih = document.getElementById('modal-event-date').value;
+                    const saat = document.getElementById('modal-event-time').value;
+                    const aciklama = document.getElementById('modal-event-desc').value.trim();
+                    const finalDesc = (status === 'İptal' && cancelReason) ? `${aciklama} [İPTAL GEREKÇESİ: ${cancelReason}]` : aciklama;
+
+                    const { error } = await _supabase.from('ajanda_notlari').update({
+                        tarih, saat, durum, aciklama: finalDesc
+                    }).eq('id', eventId);
+
+                    if (error) { alert("Güncelleme hatası: " + error.message); return; }
+                }
+            } else {
+                if (!isManager) {
+                    alert("Yeni kayıt ekleme yetkiniz yok.");
+                    return;
+                }
+                const tarih = document.getElementById('modal-event-date').value;
+                const saat = document.getElementById('modal-event-time').value;
+                const aciklama = document.getElementById('modal-event-desc').value.trim();
+                const finalDesc = (status === 'İptal' && cancelReason) ? `${aciklama} [İPTAL GEREKÇESİ: ${cancelReason}]` : aciklama;
+
+                const yeniKayit = {
+                    tur: 'kkm',
+                    ekleyen_kisi: currentUser.adsoyad,
+                    tarih,
+                    saat,
+                    durum: status,
+                    aciklama: finalDesc
+                };
+                const { error } = await _supabase.from('ajanda_notlari').insert([yeniKayit]);
+                if (error) { alert("Hata: " + error.message); return; }
+            }
+
+            toggleEventModal(false);
+            fetchEvents();
+        });
+
+        async function fetchEvents() {
+            if (!currentUser) return;
+            const filterDate = document.getElementById('filter-date').value;
+            const weekDays = getWorkWeekDates(filterDate);
+            const startDate = weekDays[0];
+            const endDate = weekDays[4];
+
+            const { data, error } = await _supabase.from('ajanda_notlari').select('*')
+                .eq('tur', 'kkm')
+                .gte('tarih', startDate)
+                .lte('tarih', endDate)
+                .order('saat', { ascending: true });
+
+            if (error) { console.error(error); return; }
+
+            cachedCurrentWeekEvents = data || [];
+
+            const headerEl = document.getElementById('calendar-header');
+            const bodyEl = document.getElementById('calendar-body');
+
+            const dayNames = [
+                { name: 'Pazartesi' }, { name: 'Salı' }, { name: 'Çarşamba' },
+                { name: 'Perşembe' }, { name: 'Cuma' }
+            ];
+
+            let headerHtml = `<th class="p-3 text-xs font-bold text-slate-500 uppercase border-r border-slate-200 bg-slate-100 text-center w-24">Saat</th>`;
+            weekDays.forEach((dateStr, idx) => {
+                const isToday = (dateStr === todayStr);
+                const [y, m, d] = dateStr.split('-');
+                headerHtml += `
+                    <th class="p-3 text-center border-r border-slate-200 ${isToday ? 'text-blue-700 bg-blue-50' : 'text-slate-700'} min-w-[180px]">
+                        <span class="block text-xs font-bold">${dayNames[idx].name}</span>
+                        <span class="text-[11px] font-medium ${isToday ? 'bg-blue-600 text-white px-2 py-0.5 rounded-full inline-block mt-0.5' : 'text-slate-500'}">${d}.${m}.${y}</span>
+                    </th>
+                `;
+            });
+            headerEl.innerHTML = headerHtml;
+
+            const timeSlots = [];
+            for (let h = 8; h <= 17; h++) {
+                const hourStr = h < 10 ? '0' + h : '' + h;
+                timeSlots.push(`${hourStr}:00`);
+                timeSlots.push(`${hourStr}:30`);
+            }
+            timeSlots.push('17:30');
+
+            bodyEl.innerHTML = '';
+
+            const isManager = (currentUser.rol === 'SKKM Sor.' || currentUser.adsoyad === 'Mehmet' || currentUser.rol === 'bashekim');
+
+            timeSlots.forEach(time => {
+                const row = document.createElement('tr');
+                row.className = "hover:bg-slate-50/80 transition";
+
+                let rowHtml = `<td class="p-2 text-center text-xs font-bold text-slate-500 border-r border-slate-200 bg-slate-50">${time}</td>`;
+
+                weekDays.forEach(dateStr => {
+                    rowHtml += `
+                        <td class="p-1.5 border-r border-slate-200 align-top h-16 cursor-pointer hover:bg-blue-50/40 transition group relative" 
+                            onclick="${isManager ? `openNewEventModalForSlot('${dateStr}', '${time}')` : ''}" title="${isManager ? 'Plan eklemek için tıklayın' : ''}">
+                            ${isManager ? `
+                            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 flex items-center justify-center pointer-events-none z-20">
+                                <span class="text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded shadow-xs"><i class="fa-solid fa-plus"></i> Ekle</span>
+                            </div>` : ''}
+                            <div class="space-y-1 z-10 relative slot-container-${dateStr}-${time.replace(':', '')}"></div>
+                        </td>
+                    `;
+                });
+
+                row.innerHTML = rowHtml;
+                bodyEl.appendChild(row);
+            });
+
+            if (cachedCurrentWeekEvents && cachedCurrentWeekEvents.length > 0) {
+                cachedCurrentWeekEvents.forEach(ev => {
+                    const timeClassSafe = ev.saat.replace(':', '');
+                    const container = document.querySelector(`.slot-container-${ev.tarih}-${timeClassSafe}`);
+                    
+                    if (container) {
+                        const card = document.createElement('div');
+                        
+                        let cardBgClass = 'bg-sky-50 text-sky-900 border-sky-200';
+                        if (ev.durum === 'Gerçekleşti') {
+                            cardBgClass = 'bg-emerald-50 text-emerald-900 border-emerald-200';
+                        } else if (ev.durum === 'İptal') {
+                            cardBgClass = 'bg-rose-50 text-rose-900 border-rose-200';
+                        }
+
+                        card.className = `p-1.5 ${cardBgClass} border rounded-lg text-xs space-y-1 relative group/card shadow-2xs`;
+
+                        let actionButtons = `
+                            <div class="absolute top-1 right-1 flex items-center gap-1 opacity-0 group-hover/card:opacity-100 transition bg-white/90 p-0.5 rounded shadow-xs">
+                                <button onclick="event.stopPropagation(); editEvent(${ev.id})" class="text-blue-500 hover:text-blue-700 p-0.5" title="Düzenle / Durum Değiştir"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                                ${isManager ? `<button onclick="event.stopPropagation(); deleteEvent(${ev.id})" class="text-rose-500 hover:text-rose-700 p-0.5" title="Sil"><i class="fa-solid fa-trash-can text-[10px]"></i></button>` : ''}
+                            </div>
+                        `;
+
+                        card.innerHTML = `
+                            <div class="flex justify-between items-center pr-8">
+                                <span class="font-semibold text-[11px]"><i class="fa-regular fa-user mr-0.5 text-[9px]"></i>${escapeHtml(ev.ekleyen_kisi)}</span>
+                                <span class="text-[9px] font-bold opacity-80 uppercase tracking-wider">${escapeHtml(ev.durum || 'Planlandı')}</span>
+                            </div>
+                            <p class="text-[11px] leading-tight whitespace-pre-wrap">${escapeHtml(ev.aciklama)}</p>
+                            ${actionButtons}
+                        `;
+                        container.appendChild(card);
+                    }
+                });
+            }
+        }
+
+        window.openNewEventModalForSlot = function(date, time) {
+            document.getElementById('edit-event-id').value = '';
+            document.getElementById('modal-event-date').value = date;
+            document.getElementById('modal-event-time').value = time;
+            document.getElementById('modal-event-status').value = 'Planlandı';
+            document.getElementById('modal-event-desc').value = '';
+            document.getElementById('cancel-reason-container').classList.add('hidden');
+            toggleEventModal(true);
+        };
+
+        window.editEvent = function(id) {
+            const ev = cachedCurrentWeekEvents.find(e => e.id == id);
+            if (ev) {
+                toggleEventModal(true, ev);
+            }
+        };
+
+        window.deleteEvent = async function(id) {
+            const isManager = (currentUser.rol === 'SKKM Sor.' || currentUser.adsoyad === 'Mehmet' || currentUser.rol === 'bashekim');
+            if (!isManager) {
+                alert("Silme yetkiniz bulunmamaktadır.");
+                return;
+            }
+            if (confirm("Bu planı silmek istediğinize emin misiniz?")) {
+                await _supabase.from('ajanda_notlari').delete().eq('id', id);
+                fetchEvents();
+            }
+        };
+
+        // Haftalık Yatay PDF İndir
+        function generateCurrentWeekPDF() {
+            const filterDate = document.getElementById('filter-date').value;
+            const weekDays = getWorkWeekDates(filterDate);
+            
+            if (!cachedCurrentWeekEvents || cachedCurrentWeekEvents.length === 0) {
+                alert("Bu hafta ekranda gösterilecek kayıtlı plan bulunmamaktadır.");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+
+            const dayNamesTR = ['Pazartesi', 'Sali', 'Carsamba', 'Persembe', 'Cuma'];
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(13);
+            doc.setTextColor(30, 41, 59);
+            doc.text(fixTurkishChars("CANAKKALE IL AMBULANS SERVISI KKM"), 14, 12);
+
+            doc.setFontSize(10);
+            doc.setTextColor(37, 99, 235);
+            doc.text(fixTurkishChars(`KKM Sorumlu ve Doktorlari Haftalik Ajandasi (${weekDays[0].split('-').reverse().join('.')} - ${weekDays[4].split('-').reverse().join('.')})`), 14, 18);
+
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            doc.text(fixTurkishChars(`Rapor Olusturma: ${new Date().toLocaleDateString('tr-TR')}`), 14, 23);
+
+            let startY = 30;
+            doc.setFontSize(9);
+
+            const sortedEvents = [...cachedCurrentWeekEvents].sort((a, b) => a.tarih.localeCompare(b.tarih) || a.saat.localeCompare(b.saat));
+
+            sortedEvents.forEach(ev => {
+                if (startY > 185) return;
+
+                const [y, m, d] = ev.tarih.split('-');
+                const dayIndex = weekDays.indexOf(ev.tarih);
+                const dayName = dayIndex !== -1 ? dayNamesTR[dayIndex] : '';
+
+                doc.setFillColor(248, 250, 252);
+                doc.setDrawColor(203, 213, 225);
+                doc.roundedRect(14, startY, 269, 11, 1, 1, 'FD');
+
+                doc.setFont("helvetica", "bold");
+                doc.setTextColor(30, 41, 59);
+                doc.text(fixTurkishChars(`${dayName}, ${d}.${m}.${y} - Saat: ${ev.saat}`), 18, startY + 7);
+
+                doc.setFont("helvetica", "normal");
+                doc.text(fixTurkishChars(`${ev.ekleyen_kisi}: ${ev.aciklama} (${ev.durum || 'Planlandi'})`), 85, startY + 7);
+
+                startY += 14;
+            });
+
+            doc.save(`Canakkale_112_KKM_Ajanda_${weekDays[0]}.pdf`);
+        }
+
+        document.getElementById('filter-date').addEventListener('change', fetchEvents);
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+    </script>
+</body>
+</html>
