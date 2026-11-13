@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çanakkale 112 SKKM Ajandası </title>
+    <title>Çanakkale 112 SKKM Ajandası</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -153,7 +153,7 @@
         </main>
 
         <footer class="text-center py-4 text-xs text-slate-400 border-t border-slate-200 mt-6 bg-white">
-            Çanakkale İl Ambulans Servisi Başhekimliği &bull; SKKM Kurumsal Masa Ajandası *Agonya V1.1
+            Çanakkale İl Ambulans Servisi Başhekimliği  &bull; SKKM Masa Ajandası *Agonya V1.1 
         </footer>
     </div>
 
@@ -247,14 +247,12 @@
             
             const isManager = (currentUser.rol === 'SKKM Sor.' || currentUser.adsoyad === 'Mehmet' || currentUser.rol === 'bashekim');
             
-            // Sadece SKKM Sor. veya Admin plan ekleyebilir
             if (isManager && currentUser.rol !== 'SKKM') {
                 document.getElementById('add-plan-btn').classList.remove('hidden');
             } else {
                 document.getElementById('add-plan-btn').classList.add('hidden');
             }
 
-            // Sadece Başhekim ve Admin (Mehmet) için "Ana Sayfaya Dön" butonu görünür
             const isAdminOrBashekim = (currentUser.adsoyad === 'Mehmet' || currentUser.rol === 'bashekim');
             if (isAdminOrBashekim) {
                 document.getElementById('home-nav-btn').classList.remove('hidden');
@@ -278,7 +276,6 @@
                 localStorage.setItem('canakkale_112_kkm_user', JSON.stringify(currentUser));
                 startAppSession();
             } else {
-                errorEl.classList.add('hidden'); // Düzeltildi
                 errorEl.classList.remove('hidden');
             }
         });
@@ -625,7 +622,7 @@
 
             doc.setFontSize(10);
             doc.setTextColor(37, 99, 235);
-            doc.text(fixTurkishChars(`SKKM Sorumlu ve Doktorlari Haftalik Ajandasi (${weekDays[0].split('-').reverse().join('.')} - ${weekDays[4].split('-').reverse().join('.')})`), 14, 18);
+            doc.text(fixTurkishChars(`SKKM Sorumlu and Doktorlari Haftalik Ajandasi (${weekDays[0].split('-').reverse().join('.')} - ${weekDays[4].split('-').reverse().join('.')})`), 14, 18);
 
             doc.setFontSize(8);
             doc.setTextColor(100, 100, 100);
