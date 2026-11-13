@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çanakkale 112 Kurumsal Ajanda V5.9</title>
+    <title>Çanakkale 112 Kurumsal Ajanda V6.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -66,7 +66,7 @@
         </div>
     </div>
 
-    <!-- ADMIN & PDF / TEMİZLEME PANELİ MODALI -->
+    <!-- ADMIN PANELİ MODALI -->
     <div id="admin-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 border border-slate-200 max-h-[90vh] overflow-y-auto">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 pb-3 border-b border-slate-100 gap-2">
@@ -81,10 +81,10 @@
                 </div>
             </div>
 
-            <!-- PDF YEDEK ALMA VE VERİ TEMİZLEME BÖLÜMÜ -->
+            <!-- ESKI TOPLU PDF YEDEK ALMA VE VERİ TEMİZLEME BÖLÜMÜ -->
             <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 mb-6 space-y-3">
-                <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-900"><i class="fa-solid fa-file-pdf mr-1"></i> Aylık Yatay PDF Raporu ve Temizlik</h4>
-                <p class="text-xs text-indigo-700">Her hafta 1 sayfayı aşmayan, yatay formatta haftalık matris raporunuzu doğrudan indirin.</p>
+                <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-900"><i class="fa-solid fa-file-pdf mr-1"></i> Aylık Arşiv Temizliği</h4>
+                <p class="text-xs text-indigo-700">Veritabanını rahatlatmak için geçmiş aylara ait verileri temizleyebilirsiniz.</p>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
@@ -92,7 +92,7 @@
                         <input type="month" id="pdf-report-month" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white">
                     </div>
                     <div>
-                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Rapor Türü / Birim</label>
+                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Temizlik Türü / Birim</label>
                         <select id="pdf-report-target" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white">
                             <option value="bashekim">Başhekimlik Genel</option>
                             <option value="tum_birimler">Tüm Birimler Ortak</option>
@@ -100,11 +100,8 @@
                     </div>
                 </div>
 
-                <div class="flex gap-2 pt-1">
-                    <button type="button" onclick="generateMonthlyLandscapePDF()" class="w-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1">
-                        <i class="fa-solid fa-file-arrow-down"></i> Yatay PDF İndir
-                    </button>
-                    <button type="button" onclick="clearMonthData()" class="w-1/2 bg-rose-600 hover:bg-rose-700 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1 shadow-xs">
+                <div class="pt-1">
+                    <button type="button" onclick="clearMonthData()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1 shadow-xs">
                         <i class="fa-solid fa-trash-arrow-up"></i> Seçilen Ayı Temizle
                     </button>
                 </div>
@@ -237,6 +234,8 @@
                     </div>
                     <button onclick="changeWeek(1)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition">Sonraki Hafta <i class="fa-solid fa-chevron-right ml-1"></i></button>
                     <button onclick="fetchEvents()" class="p-2 text-slate-500 hover:text-indigo-600 rounded-xl border border-slate-200 bg-white" title="Yenile"><i class="fa-solid fa-rotate"></i></button>
+                    <!-- YENİ EKLENEN PDF İNDİRME İKONU -->
+                    <button onclick="generateCurrentWeekPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs" title="Bu Haftanın PDF Çıktısını Al"><i class="fa-solid fa-file-arrow-down"></i> PDF İndir</button>
                 </div>
             </div>
 
@@ -254,7 +253,7 @@
         </main>
 
         <footer class="text-center py-4 text-xs text-slate-400 border-t border-slate-200 mt-6 bg-white">
-            Çanakkale İl Ambulans Servisi Başhekimliği &bull; Kurumsal Masa Ajandası V5.9
+            Çanakkale İl Ambulans Servisi Başhekimliği &bull; Kurumsal Masa Ajandası V6.0
         </footer>
     </div>
 
@@ -282,12 +281,12 @@
         let currentUser = null;
         let currentTab = 'bashekim';
         let clockInterval = null;
+        let cachedCurrentWeekEvents = []; // Aktif haftanın verilerini saklar
 
         const todayStr = new Date().toISOString().split('T')[0];
         document.getElementById('filter-date').value = todayStr;
         document.getElementById('pdf-report-month').value = todayStr.substring(0, 7);
 
-        // Türkçe karakterleri PDF uyumlu hale getiren yardımcı fonksiyon
         function fixTurkishChars(str) {
             if (!str) return '';
             return str
@@ -706,6 +705,8 @@
             const { data, error } = await query.order('saat', { ascending: true });
             if (error) { console.error(error); return; }
 
+            cachedCurrentWeekEvents = data || []; // Aktif hafta verilerini önbelleğe al
+
             const headerEl = document.getElementById('calendar-header');
             const bodyEl = document.getElementById('calendar-body');
 
@@ -775,8 +776,8 @@
                 bodyEl.appendChild(row);
             });
 
-            if (data && data.length > 0) {
-                data.forEach(ev => {
+            if (cachedCurrentWeekEvents && cachedCurrentWeekEvents.length > 0) {
+                cachedCurrentWeekEvents.forEach(ev => {
                     const timeClassSafe = ev.saat.replace(':', '');
                     const container = document.querySelector(`.slot-container-${ev.tarih}-${timeClassSafe}`);
                     
@@ -840,125 +841,73 @@
             }
         }
 
-        // YATAY (LANDSCAPE) VE HER HAFTA 1 SAYFA OLACAK ŞEKİLDE PDF RAPORU (TÜRKÇE KARAKTER UYUMLU)
-        async function generateMonthlyLandscapePDF() {
-            const monthInput = document.getElementById('pdf-report-month').value;
-            const targetType = document.getElementById('pdf-report-target').value;
-            if (!monthInput) { alert("Lütfen bir ay seçin."); return; }
-
-            const [year, month] = monthInput.split('-');
-            const firstDayOfMonth = new Date(year, month - 1, 1);
-            const lastDayOfMonth = new Date(year, month, 0);
-
-            let curr = new Date(firstDayOfMonth);
-            const day = curr.getDay();
-            const diffToMonday = curr.getDate() - day + (day === 0 ? -6 : 1);
-            curr.setDate(diffToMonday);
-
-            const mondaysOfWeeks = [];
-            while (curr <= lastDayOfMonth) {
-                mondaysOfWeeks.push(new Date(curr).toISOString().split('T')[0]);
-                curr.setDate(curr.getDate() + 7);
+        // --- EKRANDA GÖRÜNTÜLENEN AKTİF HAFTANIN PDF ÇIKTISINI ALMA ---
+        function generateCurrentWeekPDF() {
+            const filterDate = document.getElementById('filter-date').value;
+            const weekDays = getWorkWeekDates(filterDate); // 5 Gün (Pazartesi - Cuma)
+            
+            if (!cachedCurrentWeekEvents || cachedCurrentWeekEvents.length === 0) {
+                alert("Bu hafta ekranda gösterilecek kayıtlı plan bulunmamaktadır.");
+                return;
             }
-
-            const startDateStr = `${year}-${month}-01`;
-            const endDateStr = `${year}-${month}-${lastDayOfMonth.getDate()}`;
-
-            let query = _supabase.from('ajanda_notlari').select('*')
-                .gte('tarih', startDateStr)
-                .lte('tarih', endDateStr);
-
-            if (targetType === 'bashekim') {
-                query = query.eq('tur', 'bashekim');
-            } else {
-                query = query.eq('tur', 'birim');
-            }
-
-            const { data: monthEvents, error } = await query;
-            if (error) { alert("Veriler çekilemedi: " + error.message); return; }
 
             const { jsPDF } = window.jspdf;
-            const doc = new jsPDF('l', 'mm', 'a4');
+            const doc = new jsPDF('l', 'mm', 'a4'); // Yatay Landscape A4
 
-            const monthNamesTR = ["Ocak", "Subat", "Mart", "Nisan", "Mayis", "Haziran", "Temmuz", "Agustos", "Eylul", "Ekim", "Kasim", "Aralik"];
-            const titleText = targetType === 'bashekim' ? 'Bashekimlik Genel Masa Ajandasi' : 'Tum Birimler Ortak Ajandasi';
-            const monthTitleStr = `${monthNamesTR[parseInt(month)-1]} ${year}`;
+            const dayNamesTR = ['Pazartesi', 'Sali', 'Carsamba', 'Persembe', 'Cuma'];
+            const tabTitleMap = {
+                'bashekim': 'Bashekimlik Genel Masa Ajandasi',
+                'birim': currentUser.rol === 'bashekim' ? 'Tum Birimler Ortak Ajandasi' : `${currentUser.birim} Ortak Ajandasi`,
+                'kisisel': `${currentUser.adsoyad} - Kisisel Ajanda`
+            };
 
-            const birimlerToProcess = (targetType === 'tum_birimler') ? birimlerListesi : ['Genel'];
+            // Başlık Bilgileri
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(13);
+            doc.setTextColor(30, 41, 59);
+            doc.text(fixTurkishChars("CANAKKALE IL AMBULANS SERVISI BASHEKIMLIGI"), 14, 12);
 
-            birimlerToProcess.forEach((birimName, bIdx) => {
-                mondaysOfWeeks.forEach((mondayStr, weekIndex) => {
-                    const weekDates = [];
-                    const mDate = new Date(mondayStr);
-                    for (let i = 0; i < 5; i++) {
-                        const d = new Date(mDate);
-                        d.setDate(mDate.getDate() + i);
-                        weekDates.push(d.toISOString().split('T')[0]);
-                    }
+            doc.setFontSize(10);
+            doc.setTextColor(79, 70, 229);
+            const reportTitle = tabTitleMap[currentTab] || 'Haftalik Masa Ajandasi';
+            doc.text(fixTurkishChars(`${reportTitle} (${weekDays[0].split('-').reverse().join('.')} - ${weekDays[4].split('-').reverse().join('.')})`), 14, 18);
 
-                    const weekEvents = (monthEvents || []).filter(ev => {
-                        const matchDate = weekDates.includes(ev.tarih);
-                        const matchBirim = (targetType === 'tum_birimler') ? (ev.hedef_birim === birimName) : true;
-                        return matchDate && matchBirim;
-                    });
+            doc.setFontSize(8);
+            doc.setTextColor(100, 100, 100);
+            doc.text(fixTurkishChars(`Rapor Olusturma: ${new Date().toLocaleDateString('tr-TR')}`), 14, 23);
 
-                    if (weekEvents.length === 0 && targetType === 'tum_birimler') return;
+            let startY = 30;
+            doc.setFontSize(9);
 
-                    if (doc.internal.getNumberOfPages() > 1 || bIdx > 0 || weekIndex > 0) {
-                        doc.addPage();
-                    }
+            // Sadece dolu olan planları saat satırı olmaksızın liste formatında bastır
+            // Saate ve tarihe göre sırala
+            const sortedEvents = [...cachedCurrentWeekEvents].sort((a, b) => a.tarih.localeCompare(b.tarih) || a.saat.localeCompare(b.saat));
 
-                    doc.setFont("helvetica", "bold");
-                    doc.setFontSize(13);
-                    doc.setTextColor(30, 41, 59);
-                    doc.text(fixTurkishChars("CANAKKALE IL AMBULANS SERVISI BASHEKIMLIGI"), 14, 12);
+            sortedEvents.forEach(ev => {
+                if (startY > 185) return; // 1 sayfayı aşmaması için sınır
 
-                    doc.setFontSize(10);
-                    doc.setTextColor(79, 70, 229);
-                    let subTitle = `${titleText} (${monthTitleStr} - ${weekIndex + 1}. Hafta)`;
-                    if (targetType === 'tum_birimler') subTitle += ` [${birimName}]`;
-                    doc.text(fixTurkishChars(subTitle), 14, 18);
+                const [y, m, d] = ev.tarih.split('-');
+                const dayIndex = weekDays.indexOf(ev.tarih);
+                const dayName = dayIndex !== -1 ? dayNamesTR[dayIndex] : '';
 
-                    doc.setFontSize(8);
-                    doc.setTextColor(100, 100, 100);
-                    doc.text(fixTurkishChars(`Tarih Araligi: ${weekDates[0].split('-').reverse().join('.')} - ${weekDates[4].split('-').reverse().join('.')}`), 14, 23);
+                const birimTag = (currentTab === 'birim' && currentUser.rol === 'bashekim' && ev.hedef_birim) ? `[${ev.hedef_birim}] ` : '';
 
-                    let startY = 30;
-                    doc.setFontSize(9);
+                doc.setFillColor(248, 250, 252);
+                doc.setDrawColor(203, 213, 225);
+                doc.roundedRect(14, startY, 269, 11, 1, 1, 'FD');
 
-                    if (weekEvents.length === 0) {
-                        doc.setFont("helvetica", "italic");
-                        doc.setTextColor(150, 150, 150);
-                        doc.text(fixTurkishChars("Bu hafta için kayıtlı plan bulunmamaktadır."), 14, startY + 10);
-                    } else {
-                        weekEvents.sort((a, b) => a.tarih.localeCompare(b.tarih) || a.saat.localeCompare(b.saat));
+                doc.setFont("helvetica", "bold");
+                doc.setTextColor(30, 41, 59);
+                doc.text(fixTurkishChars(`${dayName}, ${d}.${m}.${y} - Saat: ${ev.saat}`), 18, startY + 7);
 
-                        weekEvents.forEach(ev => {
-                            if (startY > 185) return;
+                doc.setFont("helvetica", "normal");
+                doc.text(fixTurkishChars(`${birimTag}${ev.ekleyen_kisi}: ${ev.aciklama} (${ev.durum || 'Planlandi'})`), 85, startY + 7);
 
-                            const [y, m, d] = ev.tarih.split('-');
-                            const dayNameMap = ['Pazar', 'Pazartesi', 'Sali', 'Carsamba', 'Persembe', 'Cuma', 'Cumartesi'];
-                            const dayName = dayNameMap[new Date(ev.tarih).getDay()];
-
-                            doc.setFillColor(248, 250, 252);
-                            doc.setDrawColor(203, 213, 225);
-                            doc.roundedRect(14, startY, 269, 11, 1, 1, 'FD');
-
-                            doc.setFont("helvetica", "bold");
-                            doc.setTextColor(30, 41, 59);
-                            doc.text(fixTurkishChars(`${dayName}, ${d}.${m}.${y} - Saat: ${ev.saat}`), 18, startY + 7);
-
-                            doc.setFont("helvetica", "normal");
-                            doc.text(fixTurkishChars(`${ev.ekleyen_kisi}: ${ev.aciklama} (${ev.durum || 'Planlandi'})`), 85, startY + 7);
-
-                            startY += 14;
-                        });
-                    }
-                });
+                startY += 14;
             });
 
-            doc.save(`Canakkale_112_Ajanda_Yatay_Rapor_${year}_${month}.pdf`);
-            toggleAdminModal(false);
+            // Doğrudan PDF Dosyasını İndir
+            doc.save(`Canakkale_112_Haftalik_Ajanda_${weekDays[0]}.pdf`);
         }
 
         async function clearMonthData() {
@@ -971,7 +920,7 @@
             const startDateStr = `${year}-${month}-01`;
             const endDateStr = `${year}-${month}-${lastDayOfMonth}`;
 
-            const confirmMsg = `DİKKAT: ${month}/${year} dönemine ait (${targetType === 'bashekim' ? 'Başhekimlik Genel' : 'Tüm Birimler Ortak'}) verilerini kalıcı olarak silmek istediğinize emin misiniz?\n\nLütfen önce PDF yedeğini aldığınızdan emin olun!`;
+            const confirmMsg = `DİKKAT: ${month}/${year} dönemine ait (${targetType === 'bashekim' ? 'Başhekimlik Genel' : 'Tüm Birimler Ortak'}) verilerini kalıcı olarak silmek istediğinize emin misiniz?`;
             
             if (confirm(confirmMsg)) {
                 let query = _supabase.from('ajanda_notlari').delete()
