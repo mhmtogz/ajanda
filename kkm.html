@@ -189,8 +189,8 @@
         <header id="app-header" class="bg-rose-600 text-white shadow-md py-4 px-4 transition-colors duration-300">
             <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight"><i class="fa-solid fa-headset mr-2"></i> Çanakkale 112 KKM Ajanda</h1>
-                    <p class="text-white/80 text-xs mt-0.5">Çanakkale İl Ambulans Servisi Başhekimliği &bull; Komuta Kontrol Merkezi</p>
+                    <h1 class="text-2xl font-bold tracking-tight"><i class="fa-solid fa-headset mr-2"></i> Çanakkale 112 SKKM Ajanda</h1>
+                    <p class="text-white/80 text-xs mt-0.5">Çanakkale İl Ambulans Servisi Başhekimliği</p>
                 </div>
                 
                 <div class="flex items-center gap-2 bg-black/10 px-4 py-2 rounded-xl border border-white/20 text-sm">
@@ -217,10 +217,10 @@
         <nav class="bg-white border-b border-slate-200 shadow-xs">
             <div class="max-w-[1400px] mx-auto flex px-4 gap-4 overflow-x-auto">
                 <button onclick="switchTab('genel')" id="tab-genel" class="py-3 px-4 font-semibold text-sm border-b-2 border-rose-600 text-rose-600 flex items-center gap-2 transition whitespace-nowrap">
-                    <i class="fa-solid fa-calendar-days text-amber-500"></i> SKKM Koordinasyon Ajandası <span class="text-xs bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full">3 Günlük</span>
+                    <i class="fa-solid fa-calendar-days text-amber-500"></i> SKKM Koordinasyon Ajandası <span class="text-xs bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full"></span>
                 </button>
                 <button onclick="switchTab('kisisel')" id="tab-kisisel" class="py-3 px-4 font-medium text-sm text-slate-500 hover:text-emerald-600 border-b-2 border-transparent flex items-center gap-2 transition whitespace-nowrap">
-                    <i class="fa-solid fa-user-pen"></i> <span id="kisisel-tab-title">SKKM Sorumlu Ajandası</span> <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">5 Gün Saatli</span>
+                    <i class="fa-solid fa-user-pen"></i> <span id="kisisel-tab-title">SKKM Sorumlu Ajandası</span> <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full"></span>
                 </button>
             </div>
         </nav>
@@ -435,7 +435,7 @@
             if (currentTab === 'genel') {
                 headerEl.classList.add('bg-rose-600');
                 genelBtn.className = "py-3 px-4 font-semibold text-sm border-b-2 border-rose-600 text-rose-600 flex items-center gap-2 transition whitespace-nowrap";
-                listTitle.textContent = "SKKM Koordinasyon 3 Günlük Ajandası";
+                listTitle.textContent = "SKKM Koordinasyon Ajandası";
                 addBtn.style.display = canManageGenel() ? 'flex' : 'none';
                 addBtn.className = "bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs";
                 
@@ -445,7 +445,7 @@
             } else {
                 headerEl.classList.add('bg-emerald-600');
                 kisiselBtn.className = "py-3 px-4 font-semibold text-sm border-b-2 border-emerald-600 text-emerald-600 flex items-center gap-2 transition whitespace-nowrap";
-                listTitle.textContent = "SKKM Sorumlu Haftalık Ajandası (5 Gün Saatli)";
+                listTitle.textContent = "SKKM Sorumlu Haftalık Ajandası";
                 addBtn.style.display = 'flex';
                 addBtn.className = "bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs";
                 
