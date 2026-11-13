@@ -20,7 +20,7 @@
     <div id="login-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 sm:p-8 border border-slate-200">
             <div class="text-center mb-6">
-                <div id="login-icon-box" class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner transition-colors duration-300">
+                <div id="login-icon-box" class="w-16 h-16 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner transition-colors duration-300">
                     <i class="fa-solid fa-headset"></i>
                 </div>
                 <h2 class="text-xl font-bold text-slate-800">Çanakkale 112 SKKM Ajanda</h2>
@@ -30,18 +30,18 @@
             <form id="login-form" class="space-y-4">
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Birim / Unvan Seçin</label>
-                    <select id="login-user-select" class="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
+                    <select id="login-user-select" class="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 text-sm bg-white">
                         <option value="">Yükleniyor...</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Şifre</label>
-                    <input type="password" id="login-pass" placeholder="Şifrenizi giriniz..." required class="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    <input type="password" id="login-pass" placeholder="Şifrenizi giriniz..." required class="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 text-sm">
                 </div>
                 <div id="login-error" class="hidden text-xs text-rose-600 bg-rose-50 p-2.5 rounded-lg text-center font-medium border border-rose-200">
                     Hatalı şifre! Lütfen tekrar deneyin.
                 </div>
-                <button type="submit" id="login-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-xl transition duration-200 text-sm shadow-sm flex items-center justify-center gap-2">
+                <button type="submit" id="login-btn" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-medium py-2.5 px-4 rounded-xl transition duration-200 text-sm shadow-sm flex items-center justify-center gap-2">
                     <i class="fa-solid fa-right-to-bracket"></i> KKM Sistemine Giriş Yap
                 </button>
             </form>
@@ -55,18 +55,91 @@
     <div id="password-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 border border-slate-200">
             <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-key text-indigo-600"></i> Şifre Değiştir
+                <i class="fa-solid fa-key text-rose-600"></i> Şifre Değiştir
             </h3>
             <form id="password-form" class="space-y-3">
                 <div>
                     <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">Yeni Şifre</label>
-                    <input type="password" id="new-pass" placeholder="Yeni şifrenizi girin..." required class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="password" id="new-pass" placeholder="Yeni şifrenizi girin..." required class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500">
                 </div>
                 <div class="flex gap-2 pt-2">
                     <button type="button" onclick="togglePasswordModal(false)" class="w-1/2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold py-2 rounded-xl transition">İptal</button>
-                    <button type="submit" class="w-1/2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold py-2 rounded-xl transition">Kaydet</button>
+                    <button type="submit" class="w-1/2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold py-2 rounded-xl transition">Kaydet</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ADMIN PANELİ MODALI -->
+    <div id="admin-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 border border-slate-200 max-h-[90vh] overflow-y-auto">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 pb-3 border-b border-slate-100 gap-2">
+                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-amber-600"></i> KKM Yönetici, Birim ve Veri Yönetimi
+                </h3>
+                <div class="flex items-center justify-between w-full sm:w-auto gap-3">
+                    <div id="admin-live-clock" class="text-xs bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-xl flex items-center gap-1.5 shadow-2xs">
+                        <i class="fa-regular fa-clock text-amber-600"></i> <span id="clock-text">Yükleniyor...</span>
+                    </div>
+                    <button onclick="toggleAdminModal(false)" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+                </div>
+            </div>
+
+            <!-- KAPSAMLI AYLIK PDF RAPORU -->
+            <div class="bg-rose-50 p-4 rounded-xl border border-rose-100 mb-6 space-y-3">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-rose-900"><i class="fa-solid fa-file-pdf mr-1"></i> KKM Aylık PDF Raporu</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600 mb-1">Yıl ve Ay Seçin</label>
+                        <input type="month" id="pdf-report-month" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white">
+                    </div>
+                    <div class="flex items-end">
+                        <button type="button" onclick="generateComprehensiveMonthlyPDF()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-xs">
+                            <i class="fa-solid fa-file-arrow-down"></i> PDF İndir
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VERİ TEMİZLEME -->
+            <div class="bg-amber-50 p-4 rounded-xl border border-amber-100 mb-6 space-y-3">
+                <h4 class="text-xs font-bold uppercase tracking-wider text-amber-900"><i class="fa-solid fa-trash-arrow-up mr-1"></i> Arşiv Veri Temizliği</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <select id="pdf-report-target" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white">
+                        <option value="genel">KKM Koordinasyon (Genel)</option>
+                        <option value="kisisel">SKKM Sorumlu / Kişisel</option>
+                    </select>
+                    <button type="button" onclick="clearMonthData()" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1 shadow-xs">
+                        <i class="fa-solid fa-trash-can"></i> Seçilen Ayı Temizle
+                    </button>
+                </div>
+            </div>
+
+            <!-- KULLANICI / BİRİM EKLEME / DÜZENLEME FORMU -->
+            <form id="admin-user-form" class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 space-y-3">
+                <input type="hidden" id="admin-edit-user-id">
+                <h4 id="admin-form-title" class="text-xs font-bold uppercase tracking-wider text-slate-600"><i class="fa-solid fa-user-plus mr-1"></i> Yeni KKM Birimi / Rolü Tanımla</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <input type="text" id="admin-new-unit" placeholder="Birim / Unvan Adı" required class="px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white">
+                    <select id="admin-new-role" class="px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white">
+                        <option value="admin">admin</option>
+                        <option value="SKKM Sor.">SKKM Sor.</option>
+                        <option value="SKKM">SKKM</option>
+                    </select>
+                    <input type="text" id="admin-new-pass" placeholder="Şifre" required class="px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white">
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" id="admin-form-submit-btn" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-plus"></i> Supabase'e Kaydet
+                    </button>
+                    <button type="button" id="admin-form-cancel-btn" onclick="resetAdminUserForm()" class="hidden w-1/3 bg-slate-300 hover:bg-slate-400 text-slate-700 font-medium py-2 rounded-xl text-xs transition">
+                        İptal
+                    </button>
+                </div>
+            </form>
+
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2"><i class="fa-solid fa-users mr-1"></i> Kayıtlı KKM Birim / Kullanıcı Listesi</h4>
+            <div id="admin-user-list" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
         </div>
     </div>
 
@@ -75,7 +148,7 @@
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-200">
             <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
                 <h3 id="modal-title" class="text-base font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-square-plus text-indigo-600"></i> Plan Ekle / Düzenle
+                    <i class="fa-solid fa-square-plus text-rose-600"></i> Plan Ekle / Düzenle
                 </h3>
                 <button onclick="toggleEventModal(false)" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
@@ -85,16 +158,16 @@
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Tarih</label>
-                        <input type="date" id="modal-event-date" required class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                        <input type="date" id="modal-event-date" required class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Saat</label>
-                        <select id="modal-event-time" required class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"></select>
+                        <select id="modal-event-time" required class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white"></select>
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Durum</label>
-                    <select id="modal-event-status" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                    <select id="modal-event-status" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 bg-white">
                         <option value="Planlandı">Planlandı</option>
                         <option value="Gerçekleşti">Gerçekleşti</option>
                         <option value="İptal">İptal</option>
@@ -102,9 +175,9 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Açıklama / Not <span id="cancel-warning" class="text-rose-500 text-[10px] hidden">(İptal durumunda açıklama zorunludur)</span></label>
-                    <textarea id="modal-event-desc" rows="3" placeholder="Planlama detayını yazınız..." required class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm resize-none"></textarea>
+                    <textarea id="modal-event-desc" rows="3" placeholder="Planlama detayını yazınız..." required class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 text-sm resize-none"></textarea>
                 </div>
-                <button type="submit" id="modal-submit-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-xl transition duration-200 text-sm shadow-sm flex items-center justify-center gap-2">
+                <button type="submit" id="modal-submit-btn" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-medium py-2.5 px-4 rounded-xl transition duration-200 text-sm shadow-sm flex items-center justify-center gap-2">
                     <i class="fa-solid fa-floppy-disk"></i> Kaydı Kaydet
                 </button>
             </form>
@@ -113,7 +186,7 @@
 
     <!-- ANA UYGULAMA -->
     <div id="app-container" class="hidden flex-col min-h-screen justify-between">
-        <header id="app-header" class="bg-indigo-600 text-white shadow-md py-4 px-4 transition-colors duration-300">
+        <header id="app-header" class="bg-rose-600 text-white shadow-md py-4 px-4 transition-colors duration-300">
             <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight"><i class="fa-solid fa-headset mr-2"></i> Çanakkale 112 KKM Ajanda</h1>
@@ -121,15 +194,18 @@
                 </div>
                 
                 <div class="flex items-center gap-2 bg-black/10 px-4 py-2 rounded-xl border border-white/20 text-sm">
-                    <i class="fa-solid fa-user-check text-emerald-300"></i>
+                    <i class="fa-solid fa-user-check text-rose-200"></i>
                     <div>
                         <span id="current-user-badge" class="text-xs font-semibold text-white block">Aktif Birim</span>
                     </div>
                     <div class="flex items-center gap-1.5 ml-2 border-l border-white/20 pl-3">
+                        <button id="admin-btn" onclick="toggleAdminModal(true)" class="hidden bg-amber-600 hover:bg-amber-700 text-white text-xs px-2.5 py-1.5 rounded-lg transition shadow-xs" title="Yönetici Paneli">
+                            <i class="fa-solid fa-shield-halved"></i> Admin
+                        </button>
                         <button onclick="togglePasswordModal(true)" class="bg-black/20 hover:bg-black/30 text-white text-xs px-2.5 py-1.5 rounded-lg transition shadow-xs" title="Şifre Değiştir">
                             <i class="fa-solid fa-key"></i> Şifre
                         </button>
-                        <button onclick="logout()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs px-2.5 py-1.5 rounded-lg transition shadow-xs" title="Güvenli Çıkış">
+                        <button onclick="logout()" class="bg-slate-900 hover:bg-slate-950 text-white text-xs px-2.5 py-1.5 rounded-lg transition shadow-xs" title="Güvenli Çıkış">
                             <i class="fa-solid fa-power-off"></i> Çıkış
                         </button>
                     </div>
@@ -140,8 +216,8 @@
         <!-- Sekme Menüleri -->
         <nav class="bg-white border-b border-slate-200 shadow-xs">
             <div class="max-w-[1400px] mx-auto flex px-4 gap-4 overflow-x-auto">
-                <button onclick="switchTab('genel')" id="tab-genel" class="py-3 px-4 font-semibold text-sm border-b-2 border-indigo-600 text-indigo-600 flex items-center gap-2 transition whitespace-nowrap">
-                    <i class="fa-solid fa-calendar-days text-amber-500"></i> SKKM Koordinasyon Ajandası <span class="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">Genel</span>
+                <button onclick="switchTab('genel')" id="tab-genel" class="py-3 px-4 font-semibold text-sm border-b-2 border-rose-600 text-rose-600 flex items-center gap-2 transition whitespace-nowrap">
+                    <i class="fa-solid fa-calendar-days text-amber-500"></i> SKKM Koordinasyon Ajandası <span class="text-xs bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full">Genel</span>
                 </button>
                 <button onclick="switchTab('kisisel')" id="tab-kisisel" class="py-3 px-4 font-medium text-sm text-slate-500 hover:text-emerald-600 border-b-2 border-transparent flex items-center gap-2 transition whitespace-nowrap">
                     <i class="fa-solid fa-user-pen"></i> <span id="kisisel-tab-title">SKKM Sorumlu Ajandası</span> <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">Özel</span>
@@ -156,14 +232,14 @@
                     <h2 id="list-title" class="text-base font-bold text-slate-700">SKKM Koordinasyon Haftalık Ajandası</h2>
                 </div>
                 <div class="flex items-center gap-3 flex-wrap">
-                    <button id="btn-add-event" onclick="openNewEventModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs"><i class="fa-solid fa-square-plus"></i> Plan Ekle</button>
+                    <button id="btn-add-event" onclick="openNewEventModal()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs"><i class="fa-solid fa-square-plus"></i> Plan Ekle</button>
                     <button onclick="changeWeek(-1)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition"><i class="fa-solid fa-chevron-left mr-1"></i> Önceki Hafta</button>
                     <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-300 px-3 py-1 rounded-xl">
                         <label class="text-xs font-semibold text-slate-500">Hafta:</label>
                         <input type="date" id="filter-date" class="bg-transparent text-sm focus:outline-none text-slate-700 font-medium">
                     </div>
                     <button onclick="changeWeek(1)" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition">Sonraki Hafta <i class="fa-solid fa-chevron-right ml-1"></i></button>
-                    <button onclick="fetchEvents()" class="p-2 text-slate-500 hover:text-indigo-600 rounded-xl border border-slate-200 bg-white" title="Yenile"><i class="fa-solid fa-rotate"></i></button>
+                    <button onclick="fetchEvents()" class="p-2 text-slate-500 hover:text-rose-600 rounded-xl border border-slate-200 bg-white" title="Yenile"><i class="fa-solid fa-rotate"></i></button>
                     <button onclick="generateCurrentWeekPDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs" title="Bu Haftanın PDF Çıktısını Al"><i class="fa-solid fa-file-arrow-down"></i> PDF İndir</button>
                 </div>
             </div>
@@ -194,7 +270,6 @@
         const { createClient } = supabase;
         const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Tablo isimleri için otomatik tespit (Büyük/Küçük harf duyarlılığına karşı)
         let USERS_TABLE = 'kullanicilar_KKM';
         let NOTES_TABLE = 'ajanda_notlari_KKM';
 
@@ -202,9 +277,11 @@
         let currentUser = null;
         let currentTab = 'genel';
         let cachedEvents = [];
+        let clockInterval = null;
 
         const todayStr = new Date().toISOString().split('T')[0];
         document.getElementById('filter-date').value = todayStr;
+        document.getElementById('pdf-report-month').value = todayStr.substring(0, 7);
 
         function fixTurkishChars(str) {
             if (!str) return '';
@@ -215,6 +292,14 @@
                 .replace(/Ö/g, 'O').replace(/ö/g, 'o')
                 .replace(/Ş/g, 'S').replace(/ş/g, 's')
                 .replace(/Ü/g, 'U').replace(/ü/g, 'u');
+        }
+
+        function updateLiveClock() {
+            const clockTextEl = document.getElementById('clock-text');
+            if (!clockTextEl) return;
+            const now = new Date();
+            const options = { day: 'numeric', month: 'long', year: 'numeric', weekday: 'long' };
+            clockTextEl.textContent = `${now.toLocaleDateString('tr-TR', options)} - ${now.toLocaleTimeString('tr-TR')}`;
         }
 
         function populateTimeOptions() {
@@ -240,10 +325,8 @@
         populateTimeOptions();
 
         async function loadUsers() {
-            // Önce kullanicilar_KKM dene, bulunamazsa kullanicilar_kkm dene
             let res = await _supabase.from('kullanicilar_KKM').select('*').order('id', { ascending: true });
             if (res.error) {
-                console.warn("kullanicilar_KKM bulunamadı, kullanicilar_kkm deneniyor...", res.error.message);
                 res = await _supabase.from('kullanicilar_kkm').select('*').order('id', { ascending: true });
                 if (!res.error) {
                     USERS_TABLE = 'kullanicilar_kkm';
@@ -253,7 +336,7 @@
 
             if (res.error) {
                 console.error("Kullanıcılar yüklenemedi:", res.error);
-                document.getElementById('login-user-select').innerHTML = `<option value="">Bağlantı / Tablo Hatası (${res.error.message})</option>`;
+                document.getElementById('login-user-select').innerHTML = `<option value="">Bağlantı Hatası</option>`;
                 return;
             }
 
@@ -266,7 +349,7 @@
             const select = document.getElementById('login-user-select');
             select.innerHTML = '';
             if (usersList.length === 0) {
-                select.innerHTML = '<option value="">Kayıtlı birim bulunamadı (RLS kontrol edin)</option>';
+                select.innerHTML = '<option value="">Kayıtlı birim bulunamadı</option>';
                 return;
             }
             usersList.forEach(u => {
@@ -314,7 +397,13 @@
 
             document.getElementById('current-user-badge').textContent = `Aktif: ${currentUser.birim} (${currentUser.rol})`;
 
-            // SKKM kullanıcısının 2. ajandası yoktur (sadece SKKM Koordinasyon Ajandasını görür ve durum günceller)
+            // Admin butonunu sadece admin / başhekim rolüne göster
+            if (isFullAdmin()) {
+                document.getElementById('admin-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('admin-btn').classList.add('hidden');
+            }
+
             const kisiselTabBtn = document.getElementById('tab-kisisel');
             if (currentUser.birim === 'SKKM' && !isFullAdmin() && !isSKKMSor()) {
                 kisiselTabBtn.classList.add('hidden');
@@ -345,11 +434,11 @@
             headerEl.className = "text-white shadow-md py-4 px-4 transition-colors duration-300";
 
             if (currentTab === 'genel') {
-                headerEl.classList.add('bg-indigo-600');
-                genelBtn.className = "py-3 px-4 font-semibold text-sm border-b-2 border-indigo-600 text-indigo-600 flex items-center gap-2 transition whitespace-nowrap";
+                headerEl.classList.add('bg-rose-600');
+                genelBtn.className = "py-3 px-4 font-semibold text-sm border-b-2 border-rose-600 text-rose-600 flex items-center gap-2 transition whitespace-nowrap";
                 listTitle.textContent = "SKKM Koordinasyon Haftalık Ajandası";
                 addBtn.style.display = canManageGenel() ? 'flex' : 'none';
-                addBtn.className = "bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs";
+                addBtn.className = "bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs";
             } else {
                 headerEl.classList.add('bg-emerald-600');
                 kisiselBtn.className = "py-3 px-4 font-semibold text-sm border-b-2 border-emerald-600 text-emerald-600 flex items-center gap-2 transition whitespace-nowrap";
@@ -358,6 +447,160 @@
                 addBtn.className = "bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs";
             }
         }
+
+        // --- ADMIN PANELİ FONKSİYONLARI ---
+        function toggleAdminModal(show) {
+            const modal = document.getElementById('admin-modal');
+            if (show) {
+                resetAdminUserForm();
+                renderAdminUserList();
+                modal.classList.remove('hidden');
+                updateLiveClock();
+                if (clockInterval) clearInterval(clockInterval);
+                clockInterval = setInterval(updateLiveClock, 1000);
+            } else {
+                modal.classList.add('hidden');
+                if (clockInterval) clearInterval(clockInterval);
+            }
+        }
+
+        function renderAdminUserList() {
+            const listEl = document.getElementById('admin-user-list');
+            listEl.innerHTML = '';
+            usersList.forEach(user => {
+                const item = document.createElement('div');
+                item.className = "flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs";
+                item.innerHTML = `
+                    <div>
+                        <span class="font-bold text-slate-800">${user.birim}</span>
+                        <span class="text-slate-500 block">Rol: ${user.rol} | Şifre: ${user.sifre || ''}</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="prepareEditUser('${user.id}')" class="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-1 rounded-lg transition" title="Düzenle">
+                            <i class="fa-solid fa-pen"></i> Düzenle
+                        </button>
+                        ${user.birim !== 'Başhekim' ? `<button onclick="deleteUserFromSupabase('${user.id}')" class="text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2 py-1 rounded-lg transition" title="Sil"><i class="fa-solid fa-trash-can"></i> Sil</button>` : ''}
+                    </div>
+                `;
+                listEl.appendChild(item);
+            });
+        }
+
+        window.prepareEditUser = function(userId) {
+            const user = usersList.find(u => u.id == userId);
+            if (!user) return;
+
+            document.getElementById('admin-edit-user-id').value = user.id;
+            document.getElementById('admin-new-unit').value = user.birim;
+            document.getElementById('admin-new-role').value = user.rol;
+            document.getElementById('admin-new-pass').value = user.sifre;
+
+            document.getElementById('admin-form-title').innerHTML = `<i class="fa-solid fa-user-pen mr-1"></i> Birim / Rol Bilgisini Düzenle (${user.birim})`;
+            const submitBtn = document.getElementById('admin-form-submit-btn');
+            submitBtn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Değişiklikleri Kaydet`;
+            submitBtn.className = "w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1";
+            document.getElementById('admin-form-cancel-btn').classList.remove('hidden');
+        };
+
+        window.resetAdminUserForm = function() {
+            document.getElementById('admin-edit-user-id').value = '';
+            document.getElementById('admin-new-unit').value = '';
+            document.getElementById('admin-new-pass').value = '';
+            document.getElementById('admin-new-role').selectedIndex = 0;
+            document.getElementById('admin-form-title').innerHTML = `<i class="fa-solid fa-user-plus mr-1"></i> Yeni KKM Birimi / Rolü Tanımla`;
+            const submitBtn = document.getElementById('admin-form-submit-btn');
+            submitBtn.innerHTML = `<i class="fa-solid fa-plus"></i> Supabase'e Kaydet`;
+            submitBtn.className = "w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1";
+            document.getElementById('admin-form-cancel-btn').classList.add('hidden');
+        };
+
+        document.getElementById('admin-user-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const editId = document.getElementById('admin-edit-user-id').value;
+            const birim = document.getElementById('admin-new-unit').value.trim();
+            const rol = document.getElementById('admin-new-role').value;
+            const sifre = document.getElementById('admin-new-pass').value.trim();
+
+            if (!birim || !sifre) return;
+
+            if (editId) {
+                const { error } = await _supabase.from(USERS_TABLE).update({ birim, rol, sifre }).eq('id', editId);
+                if (error) { alert("Güncelleme hatası: " + error.message); return; }
+                alert("Birim bilgileri başarıyla güncellendi!");
+            } else {
+                const { error } = await _supabase.from(USERS_TABLE).insert([{ birim, rol, sifre }]);
+                if (error) { alert("Kayıt eklenirken hata: " + error.message); return; }
+                alert(`${birim} birimi başarıyla eklendi!`);
+            }
+
+            resetAdminUserForm();
+            await loadUsers();
+            renderAdminUserList();
+            populateLoginSelect();
+        });
+
+        window.deleteUserFromSupabase = async function(userId) {
+            if (confirm("Bu birimi silmek istediğinize emin misiniz?")) {
+                const { error } = await _supabase.from(USERS_TABLE).delete().eq('id', userId);
+                if (error) { alert("Silme hatası: " + error.message); return; }
+                await loadUsers();
+                renderAdminUserList();
+                populateLoginSelect();
+            }
+        };
+
+        async function generateComprehensiveMonthlyPDF() {
+            const monthInput = document.getElementById('pdf-report-month').value;
+            if (!monthInput) return;
+            const [year, month] = monthInput.split('-');
+            const lastDay = new Date(year, month, 0).getDate();
+
+            const { data: allEvents } = await _supabase.from(NOTES_TABLE).select('*')
+                .gte('tarih', `${year}-${month}-01`).lte('tarih', `${year}-${month}-${lastDay}`);
+
+            if (!allEvents || allEvents.length === 0) {
+                alert("Seçilen ayda raporlanacak veri bulunamadı.");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(13);
+            doc.setTextColor(30, 41, 59);
+            doc.text(fixTurkishChars(`Canakkale 112 KKM Aylik Raporu - ${month}/${year}`), 14, 15);
+
+            let startY = 25;
+            allEvents.forEach(ev => {
+                if (startY > 185) return;
+                doc.setFontSize(9);
+                doc.text(fixTurkishChars(`${ev.tarih} - Saat: ${ev.saat} | Tür: ${ev.tur} | Ekleyen: ${ev.ekleyen}`), 14, startY);
+                doc.text(fixTurkishChars(`Detay: ${ev.aciklama} (${ev.durum})`), 14, startY + 6);
+                startY += 14;
+            });
+
+            doc.save(`KKM_Aylik_Rapor_${year}_${month}.pdf`);
+            toggleAdminModal(false);
+        }
+
+        async function clearMonthData() {
+            const monthInput = document.getElementById('pdf-report-month').value;
+            const targetType = document.getElementById('pdf-report-target').value;
+            if (!monthInput) return;
+            const [year, month] = monthInput.split('-');
+            const lastDay = new Date(year, month, 0).getDate();
+
+            if (confirm(`Seçilen dönemin (${month}/${year}) ${targetType} verilerini silmek istediğinize emin misiniz?`)) {
+                await _supabase.from(NOTES_TABLE).delete()
+                    .gte('tarih', `${year}-${month}-01`)
+                    .lte('tarih', `${year}-${month}-${lastDay}`)
+                    .eq('tur', targetType);
+                alert("Veriler başarıyla temizlendi.");
+                fetchEvents();
+                toggleAdminModal(false);
+            }
+        }
+        // --- ADMIN PANELİ SONU ---
 
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -451,7 +694,6 @@
             const statusInput = document.getElementById('modal-event-status');
             const cancelWarning = document.getElementById('cancel-warning');
 
-            // SKKM sadece durum değiştirebilir (İptal ise açıklama girebilir), tarih/saat değiştiremez
             const isSKKMOnlyStatus = (currentTab === 'genel' && currentUser.birim === 'SKKM' && !canManageGenel());
 
             dateInput.disabled = isSKKMOnlyStatus;
@@ -526,7 +768,6 @@
             let query = _supabase.from(NOTES_TABLE).select('*').gte('tarih', weekDays[0]).lte('tarih', weekDays[4]).eq('tur', currentTab);
 
             if (currentTab === 'kisisel') {
-                // SKKM Sorumlu Ajandası sadece SKKM Sor. ve full admin tarafından görülür
                 if (!isFullAdmin() && !isSKKMSor()) {
                     cachedEvents = [];
                     renderCalendar(weekDays);
@@ -545,9 +786,9 @@
             const bodyEl = document.getElementById('calendar-body');
             const dayNames = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
 
-            let activeThemeColorClass = currentTab === 'genel' ? 'text-indigo-700 bg-indigo-50' : 'text-emerald-700 bg-emerald-50';
-            let activeThemeBadgeClass = currentTab === 'genel' ? 'bg-indigo-600 text-white' : 'bg-emerald-600 text-white';
-            let hoverThemeClass = currentTab === 'genel' ? 'hover:bg-indigo-50/40' : 'hover:bg-emerald-50/40';
+            let activeThemeColorClass = currentTab === 'genel' ? 'text-rose-700 bg-rose-50' : 'text-emerald-700 bg-emerald-50';
+            let activeThemeBadgeClass = currentTab === 'genel' ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white';
+            let hoverThemeClass = currentTab === 'genel' ? 'hover:bg-rose-50/40' : 'hover:bg-emerald-50/40';
 
             let headerHtml = `<th class="p-3 text-xs font-bold text-slate-500 uppercase border-r border-slate-200 bg-slate-100 text-center w-24">Saat</th>`;
             weekDays.forEach((dStr, idx) => {
@@ -603,7 +844,6 @@
 
                     card.className = `p-1.5 ${bg} border rounded-lg text-xs space-y-1 relative group/card shadow-2xs`;
 
-                    // Yetki kontrolleri
                     let canEdit = false;
                     let canDelete = false;
 
@@ -614,7 +854,6 @@
                         canEdit = true;
                         canDelete = true;
                     } else if (currentUser.birim === 'SKKM' && currentTab === 'genel') {
-                        // SKKM sadece durum güncelleyebilir (ve iptal ise açıklama girer), silemez
                         canEdit = true;
                         canDelete = false;
                     }
@@ -669,7 +908,7 @@
             doc.setFont("helvetica", "bold");
             doc.setFontSize(13);
             doc.setTextColor(30, 41, 59);
-            doc.text(fixTurkishChars("CANAKKALE IL AMBULANS SERVISI BASHEKIMLIGI - KKM AJANDA"), 14, 12);
+            doc.text(fixTurkishChars("CANAKKALE IL AMBULANS SERVISI KKM OPERASYONEL RAPORU"), 14, 12);
 
             let startY = 25;
             cachedEvents.forEach(ev => {
