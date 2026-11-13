@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çanakkale 112 Kurumsal Ajanda V1.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style> body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; } </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- GİRİŞ EKRANI -->
+    <div id="login-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 sm:p-8 border border-slate-200">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner">
+                    <i class="fa-solid fa-hospital-user"></i>
+                </div>
+                <h2 class="text-xl font-bold text-slate-800">Kurumsal Ajanda Girişi</h2>
+                <p class="text-xs text-slate-500 mt-1">Lütfen adınızı seçin ve şifrenizi girin.<br><span class="text-[11px] text-indigo-600 font-medium">(İlk şifre kuralı: Adınızın baş harfi + 112, Örn: r112)</span></p>
+            </div>
+            
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Kullanıcı Seçin</label>
+                    <select id="login-user-select" class="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
+                        <!-- JavaScript ile dinamik dolacak -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Şifre</label>
+                    <input type="password" id="login-pass" placeholder="Şifrenizi giriniz..." required class="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+                <div id="login-error" class="hidden text-xs text-rose-600 bg-rose-50 p-2.5 rounded-lg text-center font-medium border border-rose-200">
+                    Hatalı şifre! Lütfen tekrar deneyin.
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-xl transition duration-200 text-sm shadow-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i> Sisteme Giriş Yap
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ŞİFRE DEĞİŞTİRME MODALI -->
+    <div id="password-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 border border-slate-200">
+            <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-key text-indigo-600"></i> Şifre Değiştir
+            </h3>
+            <form id="password-form" class="space-y-3">
+                <div>
+                    <label class="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">Yeni Şifre</label>
+                    <input type="password" id="new-pass" placeholder="Yeni şifrenizi girin..." required class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="togglePasswordModal(false)" class="w-1/2 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold py-2 rounded-xl transition">İptal</button>
+                    <button type="submit" class="w-1/2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold py-2 rounded-xl transition">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ANA UYGULAMA -->
+    <div id="app-container" class="hidden flex-col min-h-screen justify-between">
+        <header class="bg-indigo-600 text-white shadow-md py-4 px-4">
+            <div class="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold tracking-tight"><i class="fa-solid fa-hospital-user mr-2"></i> Kurumsal Ajanda</h1>
+                    <p class="text-indigo-200 text-xs mt-0.5">Çanakkale İl Ambulans Servisi Başhekimliği</p>
+                </div>
+                
+                <div class="flex items-center gap-2 bg-indigo-700/80 px-4 py-2 rounded-xl border border-indigo-400/30 text-sm">
+                    <i class="fa-solid fa-user-check text-emerald-300"></i>
+                    <div>
+                        <span id="current-user-badge" class="text-xs font-semibold text-white block">Aktif Kullanıcı</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 ml-2 border-l border-indigo-500 pl-3">
+                        <button onclick="togglePasswordModal(true)" class="bg-indigo-800 hover:bg-indigo-900 text-white text-xs px-2.5 py-1.5 rounded-lg transition shadow-xs" title="Şifre Değiştir">
+                            <i class="fa-solid fa-key"></i> Şifre
+                        </button>
+                        <button onclick="logout()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs px-2.5 py-1.5 rounded-lg transition shadow-xs" title="Güvenli Çıkış">
+                            <i class="fa-solid fa-power-off"></i> Çıkış
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sekme Menüleri -->
+        <nav class="bg-white border-b border-slate-200 shadow-xs">
+            <div class="max-w-5xl mx-auto flex px-4 gap-4 overflow-x-auto">
+                <button onclick="switchTab('bashekim')" id="tab-bashekim" class="py-3 px-4 font-semibold text-sm border-b-2 border-indigo-600 text-indigo-600 flex items-center gap-2 transition whitespace-nowrap">
+                    <i class="fa-solid fa-crown text-amber-500"></i> Başhekim Planlama <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">Genel</span>
+                </button>
+                <button onclick="switchTab('birim')" id="tab-birim" class="py-3 px-4 font-medium text-sm text-slate-500 hover:text-indigo-600 border-b-2 border-transparent flex items-center gap-2 transition whitespace-nowrap">
+                    <i class="fa-solid fa-building-user"></i> Birim Planlama <span id="birim-badge" class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">Birim</span>
+                </button>
+                <button onclick="switchTab('kisisel')" id="tab-kisisel" class="py-3 px-4 font-medium text-sm text-slate-500 hover:text-indigo-600 border-b-2 border-transparent flex items-center gap-2 transition whitespace-nowrap">
+                    <i class="fa-solid fa-user-pen"></i> Kişisel Planlama <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">Özel</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Ana İçerik -->
+        <main class="max-w-5xl w-full mx-auto p-4 sm:p-6 flex-grow grid grid-cols-1 md:grid-cols-3 gap-6 mt-2">
+            <!-- Sol: Kayıt Ekleme Paneli -->
+            <section id="form-section" class="md:col-span-1 bg-white p-5 rounded-2xl shadow-sm border border-slate-200 h-fit">
+                <h2 id="form-title" class="text-lg font-semibold text-slate-700 mb-4 pb-2 border-b border-slate-100">
+                    <i class="fa-solid fa-square-plus text-indigo-600 mr-2"></i> Yeni Kayıt Ekle
+                </h2>
+
+                <!-- Eğer Başhekim 'Birim Planlama' sekmesindeyse hangi birime yazdığını seçebilsin -->
+                <div id="target-unit-container" class="hidden mb-3">
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Hedef Birim Seçin</label>
+                    <select id="target-unit-select" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
+                        <option value="Personel Birimi">Personel Birimi</option>
+                        <option value="Bilgi Sistemleri Birimi">Bilgi Sistemleri Birimi</option>
+                        <option value="Kalite Birimi">Kalite Birimi</option>
+                        <option value="Disiplin Birimi">Disiplin Birimi</option>
+                    </select>
+                </div>
+
+                <form id="agenda-form" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Tarih</label>
+                        <input type="date" id="event-date" required class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Saat (08:00 - 18:00)</label>
+                        <select id="event-time" required class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
+                            <!-- JS ile dolacak -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Açıklama / Not</label>
+                        <textarea id="event-desc" rows="3" placeholder="Planlama detayı..." required class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm resize-none"></textarea>
+                    </div>
+                    <button type="submit" id="submit-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-xl transition duration-200 text-sm shadow-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Kaydı Ekle
+                    </button>
+                </form>
+                <div id="unauthorized-msg" class="hidden text-xs text-rose-500 bg-rose-50 p-3 rounded-xl border border-rose-200 text-center font-medium">
+                    <i class="fa-solid fa-ban mr-1"></i> Bu bölüme kayıt ekleme yetkiniz bulunmamaktadır (Sadece okuyabilirsiniz).
+                </div>
+            </section>
+
+            <!-- Sağ: Kayıt Listesi -->
+            <section class="md:col-span-2 bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex flex-col">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4 pb-2 border-b border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <h2 id="list-title" class="text-lg font-semibold text-slate-700">Başhekim Planlama Kayıtları</h2>
+                        <!-- Başhekimse birim filtreleme seçeneği de görebilsin -->
+                        <select id="bashekim-unit-filter" onchange="fetchEvents()" class="hidden text-xs bg-slate-100 border border-slate-300 rounded-lg px-2 py-1 font-medium text-slate-700">
+                            <option value="Tumu">Tüm Birimler</option>
+                            <option value="Personel Birimi">Personel Birimi</option>
+                            <option value="Bilgi Sistemleri Birimi">Bilgi Sistemleri Birimi</option>
+                            <option value="Kalite Birimi">Kalite Birimi</option>
+                            <option value="Disiplin Birimi">Disiplin Birimi</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <label class="text-xs font-semibold text-slate-500 whitespace-nowrap">Tarih:</label>
+                        <input type="date" id="filter-date" class="px-3 py-1.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <button onclick="fetchEvents()" class="p-2 text-slate-500 hover:text-indigo-600 rounded-lg border border-slate-200" title="Yenile"><i class="fa-solid fa-rotate"></i></button>
+                    </div>
+                </div>
+                <div id="event-list" class="space-y-3 overflow-y-auto max-h-[480px] pr-1 flex-grow"></div>
+            </section>
+        </main>
+
+        <footer class="text-center py-4 text-xs text-slate-400 border-t border-slate-200 mt-6 bg-white">
+            Agonya V1.0 - Kurumsal bulut tabanlı planlayıcı denemesi
+        </footer>
+    </div>
+
+    <!-- JavaScript Mantığı -->
+    <script>
+        const SUPABASE_URL = 'https://dpwlgbnkqdolmczxtcbq.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_V7L29utZTCM125k55AD8Vg_Zv5z6S2q';
+
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Kullanıcı şifreleri (Tarayıcı hafızasında saklanır, şifre değişince güncellenir)
+        let credentials = JSON.parse(localStorage.getItem('hospital_credentials')) || {
+            "Sertaç":   { pass: "s112", birim: "Başhekimlik", rol: "bashekim" },
+            "Mehmet":   { pass: "m112", birim: "Bilgi Sistemleri Birimi", rol: "birim_kullanicisi" },
+            "Reyhan":   { pass: "r112", birim: "Personel Birimi", rol: "birim_kullanicisi" },
+            "Hakan":    { pass: "h112", birim: "Personel Birimi", rol: "birim_kullanicisi" },
+            "Çisem":    { pass: "ç112", birim: "Personel Birimi", rol: "birim_kullanicisi" },
+            "Nigar":    { pass: "n112", birim: "Kalite Birimi", rol: "birim_kullanicisi" },
+            "İzelcan":  { pass: "i112", birim: "Kalite Birimi", rol: "birim_kullanicisi" },
+            "Eren":     { pass: "e112", birim: "Kalite Birimi", rol: "birim_kullanicisi" },
+            "Fatma":    { pass: "f112", birim: "Kalite Birimi", rol: "birim_kullanicisi" },
+            "Ayşegül":  { pass: "a112", birim: "Disiplin Birimi", rol: "birim_kullanicisi" },
+            "Durdane":  { pass: "d112", birim: "Disiplin Birimi", rol: "birim_kullanicisi" }
+        };
+
+        let currentUser = null;
+        let currentTab = 'bashekim';
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        document.getElementById('event-date').value = todayStr;
+        document.getElementById('filter-date').value = todayStr;
+
+        function populateTimeOptions() {
+            const timeSelect = document.getElementById('event-time');
+            timeSelect.innerHTML = '';
+            const minutes = ['00', '15', '30', '45'];
+
+            for (let h = 8; h <= 18; h++) {
+                const hourStr = h < 10 ? '0' + h : '' + h;
+                for (let m of minutes) {
+                    if (h === 18 && m !== '00') break;
+                    const timeVal = `${hourStr}:${m}`;
+                    const opt = document.createElement('option');
+                    opt.value = timeVal;
+                    opt.textContent = timeVal;
+                    timeSelect.appendChild(opt);
+                }
+            }
+        }
+        populateTimeOptions();
+
+        function populateLoginSelect() {
+            const loginSelectEl = document.getElementById('login-user-select');
+            loginSelectEl.innerHTML = '';
+            for (const [name, info] of Object.entries(credentials)) {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.textContent = `${name} (${info.birim})`;
+                loginSelectEl.appendChild(opt);
+            }
+        }
+        populateLoginSelect();
+
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const selectedName = document.getElementById('login-user-select').value;
+            const enteredPass = document.getElementById('login-pass').value.trim().toLowerCase();
+            const errorEl = document.getElementById('login-error');
+
+            if (credentials[selectedName] && credentials[selectedName].pass === enteredPass) {
+                currentUser = {
+                    adsoyad: selectedName,
+                    birim: credentials[selectedName].birim,
+                    rol: credentials[selectedName].rol
+                };
+
+                document.getElementById('login-modal').classList.add('hidden');
+                const appContainer = document.getElementById('app-container');
+                appContainer.classList.remove('hidden');
+                appContainer.classList.add('flex');
+
+                document.getElementById('current-user-badge').textContent = `Aktif: ${currentUser.adsoyad} (${currentUser.birim})`;
+                
+                updatePermissions();
+                fetchEvents();
+            } else {
+                errorEl.classList.remove('hidden');
+            }
+        });
+
+        function logout() {
+            currentUser = null;
+            document.getElementById('login-pass').value = '';
+            document.getElementById('login-error').classList.add('hidden');
+            const appContainer = document.getElementById('app-container');
+            appContainer.classList.remove('flex');
+            appContainer.classList.add('hidden');
+            document.getElementById('login-modal').classList.remove('hidden');
+        }
+
+        // Şifre Değiştirme Modalı Aç/Kapat
+        function togglePasswordModal(show) {
+            const modal = document.getElementById('password-modal');
+            if (show) {
+                modal.classList.remove('hidden');
+                document.getElementById('new-pass').value = '';
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // Şifre Değiştirme İşlemi
+        document.getElementById('password-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newPass = document.getElementById('new-pass').value.trim();
+            if (!newPass) return;
+
+            credentials[currentUser.adsoyad].pass = newPass.toLowerCase();
+            localStorage.setItem('hospital_credentials', JSON.stringify(credentials));
+            alert("Şifreniz başarıyla değiştirildi!");
+            togglePasswordModal(false);
+        });
+
+        function switchTab(tab) {
+            currentTab = tab;
+            ['bashekim', 'birim', 'kisisel'].forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if (t === tab) {
+                    btn.className = "py-3 px-4 font-semibold text-sm border-b-2 border-indigo-600 text-indigo-600 flex items-center gap-2 transition whitespace-nowrap";
+                } else {
+                    btn.className = "py-3 px-4 font-medium text-sm text-slate-500 hover:text-indigo-600 border-b-2 border-transparent flex items-center gap-2 transition whitespace-nowrap";
+                }
+            });
+            updatePermissions();
+            fetchEvents();
+        }
+
+        function updatePermissions() {
+            if (!currentUser) return;
+
+            document.getElementById('birim-badge').textContent = currentUser.birim;
+            
+            const formEl = document.getElementById('agenda-form');
+            const unauthMsg = document.getElementById('unauthorized-msg');
+            const listTitle = document.getElementById('list-title');
+            const targetUnitContainer = document.getElementById('target-unit-container');
+            const bashekimUnitFilter = document.getElementById('bashekim-unit-filter');
+
+            let canWrite = false;
+
+            if (currentTab === 'bashekim') {
+                listTitle.textContent = "Başhekim Genel Planlama";
+                canWrite = (currentUser.rol === 'bashekim');
+                targetUnitContainer.classList.add('hidden');
+                bashekimUnitFilter.classList.add('hidden');
+            } else if (currentTab === 'birim') {
+                if (currentUser.rol === 'bashekim') {
+                    listTitle.textContent = "Tüm Birimler Ortak Ajandası (Başhekim Görünümü)";
+                    canWrite = true;
+                    targetUnitContainer.classList.remove('hidden'); // Başhekim hangi birime yazacağını seçebilir
+                    bashekimUnitFilter.classList.remove('hidden'); // Başhekim birimleri filtreleyebilir
+                } else {
+                    listTitle.textContent = `${currentUser.birim} Ortak Ajandası`;
+                    canWrite = true;
+                    targetUnitContainer.classList.add('hidden');
+                    bashekimUnitFilter.classList.add('hidden');
+                }
+            } else if (currentTab === 'kisisel') {
+                listTitle.textContent = `${currentUser.adsoyad} - Kişisel Ajanda`;
+                canWrite = true;
+                targetUnitContainer.classList.add('hidden');
+                bashekimUnitFilter.classList.add('hidden');
+            }
+
+            if (canWrite) {
+                formEl.classList.remove('hidden');
+                unauthMsg.classList.add('hidden');
+            } else {
+                formEl.classList.add('hidden');
+                unauthMsg.classList.remove('hidden');
+            }
+        }
+
+        async function fetchEvents() {
+            if (!currentUser) return;
+            const filterDate = document.getElementById('filter-date').value;
+            const eventListEl = document.getElementById('event-list');
+
+            let query = _supabase.from('ajanda_notlari').select('*').eq('tarih', filterDate).eq('tur', currentTab);
+
+            if (currentTab === 'birim') {
+                if (currentUser.rol === 'bashekim') {
+                    const selectedUnitFilter = document.getElementById('bashekim-unit-filter').value;
+                    if (selectedUnitFilter !== 'Tumu') {
+                        query = query.eq('hedef_birim', selectedUnitFilter);
+                    }
+                } else {
+                    query = query.eq('hedef_birim', currentUser.birim);
+                }
+            } else if (currentTab === 'kisisel') {
+                query = query.eq('ekleyen_kisi', currentUser.adsoyad);
+            }
+
+            const { data, error } = await query.order('saat', { ascending: true });
+
+            if (error) { console.error(error); return; }
+
+            eventListEl.innerHTML = '';
+            if (!data || data.length === 0) {
+                eventListEl.innerHTML = `<div class="text-center py-12 text-slate-400 text-sm"><i class="fa-regular fa-folder-open text-3xl mb-2 block"></i>Bu görünümde kayıt bulunamadı.</div>`;
+                return;
+            }
+
+            data.forEach(ev => {
+                const item = document.createElement('div');
+                item.className = "flex items-start justify-between p-3.5 bg-slate-50 border border-slate-200 rounded-xl";
+                
+                let deleteBtnHtml = '';
+                if (ev.ekleyen_kisi === currentUser.adsoyad || currentUser.rol === 'bashekim') {
+                    deleteBtnHtml = `<button onclick="deleteEvent(${ev.id})" class="text-slate-400 hover:text-rose-600 p-1"><i class="fa-solid fa-trash-can text-sm"></i></button>`;
+                }
+
+                // Birim sekmesindeyken hangi birime ait olduğunu etikette gösterelim
+                let birimBadgeText = (currentTab === 'birim' && currentUser.rol === 'bashekim' && ev.hedef_birim) 
+                    ? `<span class="text-[11px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded font-medium mb-1 mr-1 inline-block">${escapeHtml(ev.hedef_birim)}</span>` 
+                    : '';
+
+                item.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <span class="bg-indigo-100 text-indigo-700 font-bold text-xs px-2.5 py-1 rounded-lg mt-0.5"><i class="fa-regular fa-clock mr-1"></i>${ev.saat}</span>
+                        <div>
+                            ${birimBadgeText}
+                            <span class="text-[11px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded font-medium mb-1 inline-block"><i class="fa-regular fa-user mr-1"></i>${escapeHtml(ev.ekleyen_kisi)}</span>
+                            <p class="text-sm text-slate-700 whitespace-pre-wrap">${escapeHtml(ev.aciklama)}</p>
+                        </div>
+                    </div>
+                    ${deleteBtnHtml}
+                `;
+                eventListEl.appendChild(item);
+            });
+        }
+
+        document.getElementById('agenda-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const tarih = document.getElementById('event-date').value;
+            const saat = document.getElementById('event-time').value;
+            const aciklama = document.getElementById('event-desc').value.trim();
+
+            let hedefBirimVal = null;
+            if (currentTab === 'birim') {
+                hedefBirimVal = (currentUser.rol === 'bashekim') 
+                    ? document.getElementById('target-unit-select').value 
+                    : currentUser.birim;
+            }
+
+            const yeniKayit = {
+                tur: currentTab,
+                hedef_birim: hedefBirimVal,
+                ekleyen_kisi: currentUser.adsoyad,
+                tarih,
+                saat,
+                aciklama
+            };
+
+            const { error } = await _supabase.from('ajanda_notlari').insert([yeniKayit]);
+            if (error) { alert("Hata: " + error.message); return; }
+
+            document.getElementById('event-desc').value = '';
+            document.getElementById('event-time').selectedIndex = 0;
+            fetchEvents();
+        });
+
+        window.deleteEvent = async function(id) {
+            if (confirm("Bu kaydı silmek istediğinize emin misiniz?")) {
+                await _supabase.from('ajanda_notlari').delete().eq('id', id);
+                fetchEvents();
+            }
+        }
+
+        document.getElementById('filter-date').addEventListener('change', fetchEvents);
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+    </script>
+</body>
+</html>
