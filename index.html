@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çanakkale 112 Kurumsal Ajanda V4.0</title>
+    <title>Çanakkale 112 Kurumsal Ajanda V4.1</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -87,6 +87,9 @@
                         <option value="Kalite Birimi">Kalite Birimi</option>
                         <option value="Disiplin Birimi">Disiplin Birimi</option>
                         <option value="Teknik Birim">Teknik Birim</option>
+                        <option value="Depo Birimi">Depo Birimi</option>
+                        <option value="Tıbbi Cihaz Birimi">Tıbbi Cihaz Birimi</option>
+                        <option value="Arşiv Birimi">Arşiv Birimi</option>
                     </select>
                     <input type="text" id="admin-new-pass" placeholder="Şifre" required class="px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white">
                 </div>
@@ -122,6 +125,9 @@
                     <option value="Kalite Birimi">Kalite Birimi</option>
                     <option value="Disiplin Birimi">Disiplin Birimi</option>
                     <option value="Teknik Birim">Teknik Birim</option>
+                    <option value="Depo Birimi">Depo Birimi</option>
+                    <option value="Tıbbi Cihaz Birimi">Tıbbi Cihaz Birimi</option>
+                    <option value="Arşiv Birimi">Arşiv Birimi</option>
                 </select>
             </div>
 
@@ -200,6 +206,9 @@
                         <option value="Kalite Birimi">Kalite Birimi</option>
                         <option value="Disiplin Birimi">Disiplin Birimi</option>
                         <option value="Teknik Birim">Teknik Birim</option>
+                        <option value="Depo Birimi">Depo Birimi</option>
+                        <option value="Tıbbi Cihaz Birimi">Tıbbi Cihaz Birimi</option>
+                        <option value="Arşiv Birimi">Arşiv Birimi</option>
                     </select>
                 </div>
                 <div class="flex items-center gap-3">
@@ -226,7 +235,7 @@
         </main>
 
         <footer class="text-center py-4 text-xs text-slate-400 border-t border-slate-200 mt-6 bg-white">
-            Çanakkale İl Ambulans Servisi Başhekimliği &bull; Kurumsal Masa Ajandası V4.0
+            Çanakkale İl Ambulans Servisi Başhekimliği &bull; Kurumsal Masa Ajandası V4.1
         </footer>
     </div>
 
@@ -394,7 +403,7 @@
             document.getElementById('admin-new-name').value = '';
             document.getElementById('admin-new-pass').value = '';
             alert(`${adsoyad} başarıyla Supabase'e eklendi!`);
-            loadUsersFromSupabase();
+            await loadUsersFromSupabase();
             renderAdminUserList();
         });
 
@@ -405,7 +414,7 @@
                     alert("Silme hatası: " + error.message);
                     return;
                 }
-                loadUsersFromSupabase();
+                await loadUsersFromSupabase();
                 renderAdminUserList();
             }
         };
