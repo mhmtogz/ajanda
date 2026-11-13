@@ -284,7 +284,6 @@
                     timeSelect.appendChild(opt);
                 }
             }
-            // 17:30 ekle
             const optEnd = document.createElement('option');
             optEnd.value = '17:30';
             optEnd.textContent = '17:30';
@@ -482,7 +481,6 @@
             fetchEvents();
         }
 
-        // Sadece Pazartesi - Cuma (5 gün) hesapla
         function getWorkWeekDates(dateStr) {
             const curr = new Date(dateStr);
             const day = curr.getDay();
@@ -490,7 +488,7 @@
             const monday = new Date(curr.setDate(diffToMonday));
             const weekDates = [];
             
-            for (let i = 0; i < 5; i++) { // 5 Gün (Pzt-Cum)
+            for (let i = 0; i < 5; i++) {
                 const nextDay = new Date(monday);
                 nextDay.setDate(monday.getDate() + i);
                 weekDates.push(nextDay.toISOString().split('T')[0]);
@@ -498,7 +496,6 @@
             return weekDates;
         }
 
-        // Üst butondan yeni plan ekleme modalını aç
         function openNewEventModal() {
             document.getElementById('edit-event-id').value = '';
             document.getElementById('modal-event-date').value = document.getElementById('filter-date').value;
@@ -508,7 +505,6 @@
             toggleEventModal(true);
         }
 
-        // Hücreye tıklayarak ya da düzenleme için modal aç
         function toggleEventModal(show, date = '', time = '', eventData = null) {
             const modal = document.getElementById('event-modal');
             const unauthMsg = document.getElementById('modal-unauthorized');
@@ -532,7 +528,6 @@
                 else { formEl.classList.add('hidden'); unauthMsg.classList.remove('hidden'); }
 
                 if (eventData) {
-                    // Düzenleme Modu
                     document.getElementById('edit-event-id').value = eventData.id;
                     document.getElementById('modal-event-date').value = eventData.tarih;
                     document.getElementById('modal-event-time').value = eventData.saat;
@@ -542,7 +537,6 @@
                         document.getElementById('modal-target-unit-select').value = eventData.hedef_birim || birimlerListesi[0];
                     }
                 } else if (date && time) {
-                    // Hücreden tıklayarak ekleme
                     document.getElementById('edit-event-id').value = '';
                     document.getElementById('modal-event-date').value = date;
                     document.getElementById('modal-event-time').value = time;
@@ -556,7 +550,6 @@
             }
         }
 
-        // Kayıt Ekle veya Güncelle
         document.getElementById('modal-agenda-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const eventId = document.getElementById('edit-event-id').value;
@@ -574,14 +567,12 @@
             }
 
             if (eventId) {
-                // Güncelleme (Düzeltme)
                 const { error } = await _supabase.from('ajanda_notlari').update({
                     tarih, saat, durum, aciklama, hedef_birim: hedefBirimVal
                 }).eq('id', eventId);
 
                 if (error) { alert("Güncelleme hatası: " + error.message); return; }
             } else {
-                // Yeni Kayıt
                 const yeniKayit = {
                     tur: currentTab,
                     hedef_birim: hedefBirimVal,
