@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çanakkale 112 KKM Sorumlu ve Doktorları Ajandası V1.1</title>
+    <title>Çanakkale 112 SKKM Ajandası </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -17,14 +17,14 @@
 </head>
 <body id="page-body" class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between transition-colors duration-300">
 
-    <!-- GİRİŞ EKRANI (Supabaseullanicilar Tablosundan Çeker) -->
+    <!-- GİRİŞ EKRANI (Yalnızca SKKM Sor., SKKM, Başhekim ve Admin Gösterilir) -->
     <div id="login-modal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 sm:p-8 border border-slate-200">
             <div class="text-center mb-6">
                 <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl shadow-inner">
                     <i class="fa-solid fa-headset"></i>
                 </div>
-                <h2 class="text-xl font-bold text-slate-800">KKM Sorumlu & Doktor Girişi</h2>
+                <h2 class="text-xl font-bold text-slate-800">SKKM Sorumlu & Doktor Girişi</h2>
                 <p class="text-xs text-slate-500 mt-1">Lütfen adınızı seçin ve şifrenizi girin.</p>
             </div>
             
@@ -97,7 +97,7 @@
         <header class="bg-blue-600 text-white shadow-md py-4 px-4">
             <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    <h1 class="text-2xl font-bold tracking-tight"><i class="fa-solid fa-headset mr-2"></i> KKM Sorumlu ve Doktorları Ajandası</h1>
+                    <h1 class="text-2xl font-bold tracking-tight"><i class="fa-solid fa-headset mr-2"></i> SKKM Sorumlu ve Doktorları Ajandası</h1>
                     <p class="text-white/80 text-xs mt-0.5">Çanakkale İl Ambulans Servisi Komuta Kontrol Merkezi</p>
                 </div>
                 
@@ -107,7 +107,8 @@
                         <span id="current-user-badge" class="text-xs font-semibold text-white block">Aktif Kullanıcı</span>
                     </div>
                     <div class="flex items-center gap-2 ml-2 border-l border-white/20 pl-3">
-                        <a href="index.html" class="bg-indigo-700 hover:bg-indigo-800 text-white text-xs px-2.5 py-1.5 rounded-lg transition shadow-xs" title="Ana Sayfaya Dön">
+                        <!-- Yalnızca Başhekim ve Admin (Mehmet) için Ana Sayfaya Dön Butonu -->
+                        <a href="index.html" id="home-nav-btn" class="hidden bg-indigo-700 hover:bg-indigo-800 text-white text-xs px-2.5 py-1.5 rounded-lg transition shadow-xs" title="Ana Sayfaya Dön">
                             <i class="fa-solid fa-house"></i> Ana Sayfa
                         </a>
                         <button onclick="logout()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs px-2.5 py-1.5 rounded-lg transition shadow-xs" title="Güvenli Çıkış">
@@ -122,7 +123,7 @@
         <main class="max-w-[1400px] w-full mx-auto p-4 sm:p-6 flex-grow flex flex-col mt-2">
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-4 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div class="flex items-center gap-3">
-                    <h2 class="text-base font-bold text-slate-700">KKM Haftalık Çalışma ve Nöbet Ajandası</h2>
+                    <h2 class="text-base font-bold text-slate-700">SKKM Haftalık Çalışma ve Nöbet Ajandası</h2>
                 </div>
                 <div class="flex items-center gap-3 flex-wrap">
                     <button id="add-plan-btn" onclick="openNewEventModal()" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 shadow-xs"><i class="fa-solid fa-square-plus"></i> Plan Ekle</button>
@@ -152,7 +153,7 @@
         </main>
 
         <footer class="text-center py-4 text-xs text-slate-400 border-t border-slate-200 mt-6 bg-white">
-            Çanakkale İl Ambulans Servisi KKM &bull; Sorumlu ve Doktorları Ajandası V1.1
+            Çanakkale İl Ambulans Servisi Başhekimliği- SKKM &bull; Sorumlu ve Doktorları Ajandası V1.2
         </footer>
     </div>
 
@@ -185,7 +186,16 @@
         async function loadUsersFromSupabase() {
             const { data, error } = await _supabase.from('kullanicilar').select('*');
             if (error) { console.error("Kullanıcılar yüklenemedi:", error); return; }
-            usersList = data || [];
+            
+            // Sadece SKKM Sor., SKKM, Başhekim veya Mehmet (Admin) olanları filtrele
+            const allUsers = data || [];
+            usersList = allUsers.filter(u => 
+                u.rol === 'SKKM Sor.' || 
+                u.rol === 'SKKM' || 
+                u.rol === 'bashekim' || 
+                u.adsoyad === 'Mehmet'
+            );
+
             populateLoginSelect();
             checkStoredSession();
         }
@@ -197,8 +207,8 @@
                 const opt = document.createElement('option');
                 opt.value = user.adsoyad;
                 let roleLabel = user.rol;
-                if (user.rol === 'SKKM Sor.') roleLabel = 'KKM Sorumlusu';
-                else if (user.rol === 'SKKM') roleLabel = 'KKM Doktoru';
+                if (user.rol === 'SKKM Sor.') roleLabel = 'SKKM Sorumlusu';
+                else if (user.rol === 'SKKM') roleLabel = 'SKKM Doktoru';
                 else if (user.adsoyad === 'Mehmet' || user.rol === 'bashekim') roleLabel = 'Başhekim / Admin';
                 
                 opt.textContent = `${user.adsoyad} (${roleLabel})`;
@@ -230,16 +240,26 @@
             appContainer.classList.add('flex');
 
             let roleText = currentUser.rol;
-            if (currentUser.rol === 'SKKM Sor.') roleText = 'KKM Sorumlusu';
-            else if (currentUser.rol === 'SKKM') roleText = 'KKM Doktoru';
+            if (currentUser.rol === 'SKKM Sor.') roleText = 'SKKM Sorumlusu';
+            else if (currentUser.rol === 'SKKM') roleText = 'SKKM Doktoru';
             
             document.getElementById('current-user-badge').textContent = `Aktif: ${currentUser.adsoyad} (${roleText})`;
             
-            // Sadece SKKM Sor. veya Mehmet (Admin) yeni plan ekleyebilir
-            if (currentUser.rol === 'SKKM Sor.' || currentUser.adsoyad === 'Mehmet' || currentUser.rol === 'bashekim') {
+            const isManager = (currentUser.rol === 'SKKM Sor.' || currentUser.adsoyad === 'Mehmet' || currentUser.rol === 'bashekim');
+            
+            // Sadece SKKM Sor. veya Admin plan ekleyebilir
+            if (isManager && currentUser.rol !== 'SKKM') {
                 document.getElementById('add-plan-btn').classList.remove('hidden');
             } else {
                 document.getElementById('add-plan-btn').classList.add('hidden');
+            }
+
+            // Sadece Başhekim ve Admin (Mehmet) için "Ana Sayfaya Dön" butonu görünür
+            const isAdminOrBashekim = (currentUser.adsoyad === 'Mehmet' || currentUser.rol === 'bashekim');
+            if (isAdminOrBashekim) {
+                document.getElementById('home-nav-btn').classList.remove('hidden');
+            } else {
+                document.getElementById('home-nav-btn').classList.add('hidden');
             }
 
             fetchEvents();
@@ -258,6 +278,7 @@
                 localStorage.setItem('canakkale_112_kkm_user', JSON.stringify(currentUser));
                 startAppSession();
             } else {
+                errorEl.classList.add('hidden'); // Düzeltildi
                 errorEl.classList.remove('hidden');
             }
         });
@@ -317,7 +338,8 @@
         }
 
         function openNewEventModal() {
-            if (currentUser.rol !== 'SKKM Sor.' && currentUser.adsoyad !== 'Mehmet' && currentUser.rol !== 'bashekim') {
+            const isManager = (currentUser.rol === 'SKKM Sor.' || currentUser.adsoyad === 'Mehmet' || currentUser.rol === 'bashekim');
+            if (!isManager) {
                 alert("Yeni plan ekleme yetkisi yalnızca SKKM Sorumlusu'ndadır.");
                 return;
             }
@@ -359,7 +381,6 @@
                     
                     checkStatusChange();
 
-                    // Yetki Kısıtlaması: SKKM sadece durum değiştirebilir
                     const isManager = (currentUser.rol === 'SKKM Sor.' || currentUser.adsoyad === 'Mehmet' || currentUser.rol === 'bashekim');
                     if (!isManager) {
                         document.getElementById('modal-event-date').disabled = true;
@@ -394,7 +415,6 @@
 
             if (eventId) {
                 if (!isManager) {
-                    // SKKM sadece durum güncelleyebilir, iptal gerekçesini nota ekler
                     const existingEv = cachedCurrentWeekEvents.find(e => e.id == eventId);
                     let baseDesc = existingEv ? existingEv.aciklama : '';
                     const finalDesc = cancelReason ? `${baseDesc} [İPTAL GEREKÇESİ: ${cancelReason}]` : baseDesc;
@@ -601,11 +621,11 @@
             doc.setFont("helvetica", "bold");
             doc.setFontSize(13);
             doc.setTextColor(30, 41, 59);
-            doc.text(fixTurkishChars("CANAKKALE IL AMBULANS SERVISI KKM"), 14, 12);
+            doc.text(fixTurkishChars("CANAKKALE IL AMBULANS SERVISI SKKM"), 14, 12);
 
             doc.setFontSize(10);
             doc.setTextColor(37, 99, 235);
-            doc.text(fixTurkishChars(`KKM Sorumlu ve Doktorlari Haftalik Ajandasi (${weekDays[0].split('-').reverse().join('.')} - ${weekDays[4].split('-').reverse().join('.')})`), 14, 18);
+            doc.text(fixTurkishChars(`SKKM Sorumlu ve Doktorlari Haftalik Ajandasi (${weekDays[0].split('-').reverse().join('.')} - ${weekDays[4].split('-').reverse().join('.')})`), 14, 18);
 
             doc.setFontSize(8);
             doc.setTextColor(100, 100, 100);
@@ -637,7 +657,7 @@
                 startY += 14;
             });
 
-            doc.save(`Canakkale_112_KKM_Ajanda_${weekDays[0]}.pdf`);
+            doc.save(`Canakkale_112_SKKM_Ajanda_${weekDays[0]}.pdf`);
         }
 
         document.getElementById('filter-date').addEventListener('change', fetchEvents);
