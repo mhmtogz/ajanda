@@ -205,12 +205,12 @@
                 const opt = document.createElement('option');
                 opt.value = user.adsoyad;
                 
-                // Parantezsiz, sadece tam olarak istediğiniz 4 seçenek: Başhekim, Admin, SKKM, SKKM Sor.
+                // Doğru rol etiketleri ataması (Mehmet -> Admin, Sertaç -> Başhekim)
                 let displayText = user.rol;
-                if (user.adsoyad === 'Sertaç' || user.rol === 'bashekim') {
-                    displayText = 'Başhekim';
-                } else if (user.adsoyad === 'Mehmet') {
+                if (user.adsoyad === 'Mehmet') {
                     displayText = 'Admin';
+                } else if (user.adsoyad === 'Sertaç' || user.rol === 'bashekim') {
+                    displayText = 'Başhekim';
                 } else if (user.rol === 'SKKM') {
                     displayText = 'SKKM';
                 } else if (user.rol === 'SKKM Sor.') {
@@ -246,9 +246,15 @@
             appContainer.classList.add('flex');
 
             let roleText = currentUser.rol;
-            if (currentUser.rol === 'SKKM Sor.') roleText = 'SKKM Sorumlusu';
-            else if (currentUser.rol === 'SKKM') roleText = 'SKKM';
-            else if (currentUser.adsoyad === 'Mehmet' || currentUser.rol === 'bashekim') roleText = 'Başhekim / Admin';
+            if (currentUser.adsoyad === 'Mehmet') {
+                roleText = 'Admin';
+            } else if (currentUser.rol === 'SKKM Sor.') {
+                roleText = 'SKKM Sorumlusu';
+            } else if (currentUser.rol === 'SKKM') {
+                roleText = 'SKKM';
+            } else if (currentUser.adsoyad === 'Sertaç' || currentUser.rol === 'bashekim') {
+                roleText = 'Başhekim';
+            }
             
             document.getElementById('current-user-badge').textContent = `Aktif: ${currentUser.adsoyad} (${roleText})`;
             
