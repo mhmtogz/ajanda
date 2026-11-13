@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çanakkale 112 Kurumsal Ajanda V3.0</title>
+    <title>Çanakkale 112 Kurumsal Ajanda V4.0 - Bulut Tabanlı</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -30,7 +30,7 @@
                 <div>
                     <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1">Kullanıcı Seçin</label>
                     <select id="login-user-select" class="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white">
-                        <!-- JS ile dolacak -->
+                        <!-- Supabase'den dinamik dolacak -->
                     </select>
                 </div>
                 <div>
@@ -66,12 +66,12 @@
         </div>
     </div>
 
-    <!-- ADMIN PANELİ MODALI (Sadece Mehmet / 1717) -->
+    <!-- ADMIN PANELİ MODALI (Supabase Bağlı) -->
     <div id="admin-modal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full p-6 border border-slate-200 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
                 <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-user-shield text-amber-600"></i> Yönetici Paneli (Personel ve Birim Yönetimi)
+                    <i class="fa-solid fa-user-shield text-amber-600"></i> Yönetici Paneli (Bulut Veritabanı)
                 </h3>
                 <button onclick="toggleAdminModal(false)" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
@@ -88,15 +88,15 @@
                         <option value="Kalite Birimi">Kalite Birimi</option>
                         <option value="Disiplin Birimi">Disiplin Birimi</option>
                     </select>
-                    <input type="text" id="admin-new-pass" placeholder="Başlangıç Şifresi" required class="px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white">
+                    <input type="text" id="admin-new-pass" placeholder="Şifre" required class="px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white">
                 </div>
                 <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded-xl text-xs transition flex items-center justify-center gap-1">
-                    <i class="fa-solid fa-plus"></i> Kullanıcıyı Ekle / Kaydet
+                    <i class="fa-solid fa-plus"></i> Supabase'e Kaydet
                 </button>
             </form>
 
             <!-- Mevcut Kullanıcılar Listesi -->
-            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2"><i class="fa-solid fa-users mr-1"></i> Kayıtlı Personel Listesi</h4>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 mb-2"><i class="fa-solid fa-users mr-1"></i> Buluttaki Kayıtlı Personel</h4>
             <div id="admin-user-list" class="space-y-2 max-h-60 overflow-y-auto pr-1">
                 <!-- JS ile dolacak -->
             </div>
@@ -161,7 +161,6 @@
                         <span id="current-user-badge" class="text-xs font-semibold text-white block">Aktif Kullanıcı</span>
                     </div>
                     <div class="flex items-center gap-1.5 ml-2 border-l border-white/20 pl-3">
-                        <!-- Admin Butonu (Sadece Mehmet için görünür) -->
                         <button id="admin-btn" onclick="toggleAdminModal(true)" class="hidden bg-amber-600 hover:bg-amber-700 text-white text-xs px-2.5 py-1.5 rounded-lg transition shadow-xs" title="Yönetici Paneli">
                             <i class="fa-solid fa-shield-halved"></i> Admin
                         </button>
@@ -191,9 +190,8 @@
             </div>
         </nav>
 
-        <!-- Ana İçerik: Masa Takvimi Izgarası -->
+        <!-- Ana İçerik -->
         <main class="max-w-[1400px] w-full mx-auto p-4 sm:p-6 flex-grow flex flex-col mt-2">
-            <!-- Üst Kontrol Paneli -->
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mb-4 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div class="flex items-center gap-3 flex-wrap">
                     <h2 id="list-title" class="text-base font-bold text-slate-700">Haftalık Masa Ajandası</h2>
@@ -216,25 +214,20 @@
                 </div>
             </div>
 
-            <!-- Masa Takvimi Matrisi -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-grow overflow-hidden flex flex-col">
                 <div class="overflow-x-auto overflow-y-auto max-h-[700px] custom-scrollbar flex-grow">
                     <table class="w-full border-collapse text-left min-w-[1100px]">
                         <thead>
-                            <tr id="calendar-header" class="bg-slate-50 border-b border-slate-200 sticky top-0 z-20">
-                                <!-- JS ile dinamik dolacak -->
-                            </tr>
+                            <tr id="calendar-header" class="bg-slate-50 border-b border-slate-200 sticky top-0 z-20"></tr>
                         </thead>
-                        <tbody id="calendar-body" class="divide-y divide-slate-100">
-                            <!-- JS ile dolacak -->
-                        </tbody>
+                        <tbody id="calendar-body" class="divide-y divide-slate-100"></tbody>
                     </table>
                 </div>
             </div>
         </main>
 
         <footer class="text-center py-4 text-xs text-slate-400 border-t border-slate-200 mt-6 bg-white">
-            Çanakkale İl Ambulans Servisi Başhekimliği &bull; Kurumsal Masa Ajandası V3.0
+            Çanakkale İl Ambulans Servisi Başhekimliği &bull; Kurumsal Masa Ajandası V4.0
         </footer>
     </div>
 
@@ -246,41 +239,38 @@
         const { createClient } = supabase;
         const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Kullanıcılar ve Şifreler (Mehmet Admin, şifresi 1717)
-        let credentials = JSON.parse(localStorage.getItem('hospital_credentials')) || {
-            "Mehmet":   { pass: "1717", birim: "Bilgi Sistemleri Birimi", rol: "bashekim" }, // Mehmet admin yapıldı
-            "Sertaç":   { pass: "s112", birim: "Başhekimlik", rol: "bashekim" },
-            "Reyhan":   { pass: "r112", birim: "Personel Birimi", rol: "birim_kullanicisi" },
-            "Hakan":    { pass: "h112", birim: "Personel Birimi", rol: "birim_kullanicisi" },
-            "Çisem":    { pass: "ç112", birim: "Personel Birimi", rol: "birim_kullanicisi" },
-            "Nigar":    { pass: "n112", birim: "Kalite Birimi", rol: "birim_kullanicisi" },
-            "İzelcan":  { pass: "i112", birim: "Kalite Birimi", rol: "birim_kullanicisi" },
-            "Eren":     { pass: "e112", birim: "Kalite Birimi", rol: "birim_kullanicisi" },
-            "Fatma":    { pass: "f112", birim: "Kalite Birimi", rol: "birim_kullanicisi" },
-            "Ayşegül":  { pass: "a112", birim: "Disiplin Birimi", rol: "birim_kullanicisi" },
-            "Durdane":  { pass: "d112", birim: "Disiplin Birimi", rol: "birim_kullanicisi" }
-        };
-
+        let usersList = [];
         let currentUser = null;
         let currentTab = 'bashekim';
-
         let selectedModalDate = '';
         let selectedModalTime = '';
 
         const todayStr = new Date().toISOString().split('T')[0];
         document.getElementById('filter-date').value = todayStr;
 
+        // Supabase'den kullanıcıları yükle
+        async function loadUsersFromSupabase() {
+            const { data, error } = await _supabase.from('kullanicilar').select('*');
+            if (error) {
+                console.error("Kullanıcılar yüklenemedi:", error);
+                return;
+            }
+            usersList = data || [];
+            populateLoginSelect();
+        }
+
         function populateLoginSelect() {
             const loginSelectEl = document.getElementById('login-user-select');
             loginSelectEl.innerHTML = '';
-            for (const [name, info] of Object.entries(credentials)) {
+            usersList.forEach(user => {
                 const opt = document.createElement('option');
-                opt.value = name;
-                opt.textContent = `${name} (${info.birim})`;
+                opt.value = user.adsoyad;
+                opt.textContent = `${user.adsoyad} (${user.birim})`;
                 loginSelectEl.appendChild(opt);
-            }
+            });
         }
-        populateLoginSelect();
+
+        loadUsersFromSupabase();
 
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -288,11 +278,14 @@
             const enteredPass = document.getElementById('login-pass').value.trim().toLowerCase();
             const errorEl = document.getElementById('login-error');
 
-            if (credentials[selectedName] && credentials[selectedName].pass === enteredPass) {
+            const foundUser = usersList.find(u => u.adsoyad === selectedName);
+
+            // Özel Admin Kuralı: Mehmet veya şifre 1717 kontrolü
+            if (foundUser && (foundUser.sifre === enteredPass || (foundUser.adsoyad === 'Mehmet' && enteredPass === '1717'))) {
                 currentUser = {
-                    adsoyad: selectedName,
-                    birim: credentials[selectedName].birim,
-                    rol: credentials[selectedName].rol
+                    adsoyad: foundUser.adsoyad,
+                    birim: foundUser.birim,
+                    rol: foundUser.rol
                 };
 
                 document.getElementById('login-modal').classList.add('hidden');
@@ -302,7 +295,7 @@
 
                 document.getElementById('current-user-badge').textContent = `Aktif: ${currentUser.adsoyad} (${currentUser.birim})`;
                 
-                // Eğer giriş yapan Mehmet ise Admin butonunu göster
+                // Admin butonu (Mehmet için görünür)
                 if (currentUser.adsoyad === 'Mehmet') {
                     document.getElementById('admin-btn').classList.remove('hidden');
                 } else {
@@ -336,18 +329,27 @@
             }
         }
 
-        document.getElementById('password-form').addEventListener('submit', function(e) {
+        // Şifre Güncelleme (Supabase'e kaydeder)
+        document.getElementById('password-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const newPass = document.getElementById('new-pass').value.trim();
+            const newPass = document.getElementById('new-pass').value.trim().toLowerCase();
             if (!newPass) return;
 
-            credentials[currentUser.adsoyad].pass = newPass.toLowerCase();
-            localStorage.setItem('hospital_credentials', JSON.stringify(credentials));
-            alert("Şifreniz başarıyla değiştirildi!");
+            const { error } = await _supabase.from('kullanicilar')
+                .update({ sifre: newPass })
+                .eq('adsoyad', currentUser.adsoyad);
+
+            if (error) {
+                alert("Şifre güncellenirken hata oluştu: " + error.message);
+                return;
+            }
+
+            alert("Şifreniz Supabase üzerinde başarıyla güncellendi!");
             togglePasswordModal(false);
+            loadUsersFromSupabase();
         });
 
-        // Admin Paneli Aç/Kapat ve Listeyi Doldur
+        // Admin Paneli
         function toggleAdminModal(show) {
             const modal = document.getElementById('admin-modal');
             if (show) {
@@ -361,49 +363,60 @@
         function renderAdminUserList() {
             const listEl = document.getElementById('admin-user-list');
             listEl.innerHTML = '';
-            for (const [name, info] of Object.entries(credentials)) {
+            usersList.forEach(user => {
                 const item = document.createElement('div');
                 item.className = "flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs";
                 item.innerHTML = `
                     <div>
-                        <span class="font-bold text-slate-800">${name}</span>
-                        <span class="text-slate-500 block">Birim: ${info.birim} | Şifre: ${info.pass}</span>
+                        <span class="font-bold text-slate-800">${user.adsoyad}</span>
+                        <span class="text-slate-500 block">Birim: ${user.birim} | Şifre: ${user.sifre || 'Belirtilmemiş'}</span>
                     </div>
-                    ${name !== 'Mehmet' ? `<button onclick="deleteUserFromAdmin('${name}')" class="text-rose-600 hover:text-rose-800 p-1"><i class="fa-solid fa-trash-can"></i> Sil</button>` : '<span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">Admin</span>'}
+                    ${user.adsoyad !== 'Mehmet' ? `<button onclick="deleteUserFromSupabase('${user.id}')" class="text-rose-600 hover:text-rose-800 p-1"><i class="fa-solid fa-trash-can"></i> Sil</button>` : '<span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">Admin</span>'}
                 `;
                 listEl.appendChild(item);
-            }
+            });
         }
 
-        // Admin panelinden yeni kullanıcı ekleme
-        document.getElementById('admin-add-user-form').addEventListener('submit', function(e) {
+        // Supabase'e Yeni Kullanıcı Ekleme
+        document.getElementById('admin-add-user-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const name = document.getElementById('admin-new-name').value.trim();
+            const adsoyad = document.getElementById('admin-new-name').value.trim();
             const birim = document.getElementById('admin-new-unit').value;
-            const pass = document.getElementById('admin-new-pass').value.trim().toLowerCase();
+            const sifre = document.getElementById('admin-new-pass').value.trim().toLowerCase();
 
-            if (!name || !pass) return;
+            if (!adsoyad || !sifre) return;
 
-            credentials[name] = { pass: pass, birim: birim, rol: "birim_kullanicisi" };
-            localStorage.setItem('hospital_credentials', JSON.stringify(credentials));
-            
+            const { error } = await _supabase.from('kullanicilar').insert([{
+                adsoyad,
+                birim,
+                sifre,
+                rol: 'birim_kullanicisi'
+            }]);
+
+            if (error) {
+                alert("Kullanıcı eklenirken hata: " + error.message);
+                return;
+            }
+
             document.getElementById('admin-new-name').value = '';
             document.getElementById('admin-new-pass').value = '';
+            alert(`${adsoyad} başarıyla Supabase'e eklendi!`);
+            loadUsersFromSupabase();
             renderAdminUserList();
-            populateLoginSelect();
-            alert(`${name} başarıyla eklendi!`);
         });
 
-        window.deleteUserFromAdmin = function(name) {
-            if (confirm(`${name} adlı kullanıcıyı silmek istediğinize emin misiniz?`)) {
-                delete credentials[name];
-                localStorage.setItem('hospital_credentials', JSON.stringify(credentials));
+        window.deleteUserFromSupabase = async function(userId) {
+            if (confirm("Bu kullanıcıyı kalıcı olarak silmek istediğinize emin misiniz?")) {
+                const { error } = await _supabase.from('kullanicilar').delete().eq('id', userId);
+                if (error) {
+                    alert("Silme hatası: " + error.message);
+                    return;
+                }
+                loadUsersFromSupabase();
                 renderAdminUserList();
-                populateLoginSelect();
             }
         };
 
-        // Sekme Değiştirme ve Renk Temaları
         function switchTab(tab) {
             currentTab = tab;
             updateThemeAndPermissions();
@@ -422,7 +435,6 @@
             const bashekimUnitFilter = document.getElementById('bashekim-unit-filter');
             const listTitle = document.getElementById('list-title');
 
-            // Aktif sekme renk kodlaması (Başhekim: İndigo/Mavi, Birim: Kehribar/Sarı, Kişisel: Zümrüt/Yeşil)
             ['bashekim', 'birim', 'kisisel'].forEach(t => {
                 const btn = document.getElementById(`tab-${t}`);
                 btn.className = "py-3 px-4 font-medium text-sm border-b-2 border-transparent flex items-center gap-2 transition whitespace-nowrap text-slate-500 hover:text-slate-800";
@@ -584,13 +596,8 @@
             const bodyEl = document.getElementById('calendar-body');
 
             const dayNames = [
-                { name: 'Pazartesi', short: 'Pzt' },
-                { name: 'Salı', short: 'Sal' },
-                { name: 'Çarşamba', short: 'Çar' },
-                { name: 'Perşembe', short: 'Per' },
-                { name: 'Cuma', short: 'Cum' },
-                { name: 'Cumartesi', short: 'Cmt' },
-                { name: 'Pazar', short: 'Paz' }
+                { name: 'Pazartesi' }, { name: 'Salı' }, { name: 'Çarşamba' },
+                { name: 'Perşembe' }, { name: 'Cuma' }, { name: 'Cumartesi' }, { name: 'Pazar' }
             ];
 
             let activeThemeColorClass = 'text-indigo-700 bg-indigo-50';
@@ -648,8 +655,7 @@
                             <div class="absolute inset-0 opacity-0 group-hover:opacity-100 flex items-center justify-center pointer-events-none">
                                 <span class="text-[10px] ${activeThemeBadgeClass} px-1.5 py-0.5 rounded shadow-xs"><i class="fa-solid fa-plus"></i> Ekle</span>
                             </div>
-                            <div class="space-y-1 z-10 relative slot-container-${dateStr}-${time.replace(':', '')}">
-                            </div>
+                            <div class="space-y-1 z-10 relative slot-container-${dateStr}-${time.replace(':', '')}"></div>
                         </td>
                     `;
                 });
